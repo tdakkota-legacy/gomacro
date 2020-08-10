@@ -3,6 +3,7 @@ package macromain
 import (
 	"bytes"
 	"github.com/tdakkota/gomacro"
+	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
 	"io/ioutil"
@@ -16,7 +17,7 @@ import (
 )
 
 func CreateMacro(value string) macro.HandlerFunc {
-	return func(cursor macro.Context, node ast.Node) error {
+	return func(cursor macroctx.Context, node ast.Node) error {
 		if callExpr, ok := node.(*ast.CallExpr); ok {
 			if f, ok := callExpr.Fun.(*ast.Ident); ok && f.Name == "eval" {
 				for i := range callExpr.Args {

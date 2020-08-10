@@ -1,6 +1,7 @@
 package macro
 
 import (
+	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
 	"os"
@@ -38,8 +39,8 @@ func fixImports(imports *ast.GenDecl, file *ast.File) {
 	}
 }
 
-func createContext(delayed Delayed, pkg *packages.Package) Context {
-	return Context{
+func createContext(delayed macroctx.Delayed, pkg *packages.Package) macroctx.Context {
+	return macroctx.Context{
 		FileSet:    pkg.Fset,
 		Package:    pkg.Types,
 		TypesInfo:  pkg.TypesInfo,

@@ -2,6 +2,7 @@ package macro
 
 import (
 	"errors"
+	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -24,18 +25,18 @@ func load(path ...string) ([]*packages.Package, error) {
 
 var ErrExpectedOnlyOnePackage = errors.New("expected only one package")
 
-func loadOne(path string) (Context, error) {
+func loadOne(path string) (macroctx.Context, error) {
 	pkgs, err := load(path)
 	if err != nil {
-		return Context{}, err
+		return macroctx.Context{}, err
 	}
 
 	if len(pkgs) != 1 {
-		return Context{}, ErrExpectedOnlyOnePackage
+		return macroctx.Context{}, ErrExpectedOnlyOnePackage
 	}
 	pkg := pkgs[0]
 
-	d := Delayed{}
+	d := macroctx.Delayed{}
 	d.Add(pkg)
 	ctx := createContext(d, pkg)
 	ctx.File = pkg.Syntax[0]

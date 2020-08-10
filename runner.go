@@ -1,6 +1,7 @@
 package macro
 
 import (
+	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
 
@@ -17,8 +18,8 @@ func NewRunner(fset *token.FileSet) Runner {
 	}
 }
 
-func (r Runner) Run(handler Handler, context Context, node ast.Node) ast.Node {
-	context.Report = func(report Report) {
+func (r Runner) Run(handler Handler, context macroctx.Context, node ast.Node) ast.Node {
+	context.Report = func(report macroctx.Report) {
 		r.Reportf(report.Pos, report.Message)
 	}
 
@@ -36,8 +37,8 @@ func (r Runner) Run(handler Handler, context Context, node ast.Node) ast.Node {
 	}, r.post(handler, context))
 }
 
-func (r Runner) post(handler Handler, context Context) astutil.ApplyFunc {
-	context.Report = func(report Report) {
+func (r Runner) post(handler Handler, context macroctx.Context) astutil.ApplyFunc {
+	context.Report = func(report macroctx.Report) {
 		r.Reportf(report.Pos, report.Message)
 	}
 

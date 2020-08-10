@@ -2,6 +2,7 @@ package macro
 
 import (
 	"bytes"
+	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
 	"io"
@@ -53,8 +54,8 @@ func (r ReWriter) RewriteTo(w io.Writer) error {
 	return r.runMacro(w, ctx)
 }
 
-func loadDelayed(pkgs []*packages.Package) Delayed {
-	delayed := Delayed{}
+func loadDelayed(pkgs []*packages.Package) macroctx.Delayed {
+	delayed := macroctx.Delayed{}
 	for _, pkg := range pkgs {
 		delayed.Add(pkg)
 	}
@@ -105,7 +106,7 @@ func (r ReWriter) rewriteFile() error {
 	return r.rewriteOneFile(r.output, ctx)
 }
 
-func (r ReWriter) rewriteOneFile(output string, ctx Context) error {
+func (r ReWriter) rewriteOneFile(output string, ctx macroctx.Context) error {
 	buf := new(bytes.Buffer)
 	err := r.runMacro(buf, ctx)
 	if err != nil {
@@ -147,7 +148,7 @@ func loadComments(decl ast.Decl, imports **ast.GenDecl) (comments *ast.CommentGr
 	return
 }
 
-func (r ReWriter) runMacro(w io.Writer, context Context) error {
+func (r ReWriter) runMacro(w io.Writer, context macroctx.Context) error {
 	var imports *ast.GenDecl
 
 	globalPragmas := pragma.ParsePragmas(context.File.Doc)
