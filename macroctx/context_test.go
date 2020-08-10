@@ -1,9 +1,10 @@
 package macroctx
 
 import (
-	"github.com/stretchr/testify/require"
 	"go/ast"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_importEqual(t *testing.T) {
