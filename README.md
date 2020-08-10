@@ -1,7 +1,7 @@
 # gomacro
 
 [![Go](https://github.com/tdakkota/gomacro/workflows/Go/badge.svg)](https://github.com/tdakkota/gomacro/actions)
-[![Documentation](https://godoc.org/github.com/tdakkota/gomacro?status.svg)](https://pkg.go.dev/github.com/tdakkota/gomacro?tab=subdirectories)
+[![Documentation](https://godoc.org/github.com/tdakkota/gomacro?status.svg)](https://pkg.go.dev/github.com/tdakkota/gomacro)
 [![codecov](https://codecov.io/gh/tdakkota/gomacro/branch/master/graph/badge.svg)](https://codecov.io/gh/tdakkota/gomacro)
 [![license](https://img.shields.io/github/license/tdakkota/gomacro.svg)](https://github.com/tdakkota/gomacro/blob/master/LICENSE)
 
