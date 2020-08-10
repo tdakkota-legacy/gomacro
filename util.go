@@ -1,11 +1,12 @@
 package macro
 
 import (
-	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
 	"os"
 	"path/filepath"
+
+	"github.com/tdakkota/gomacro/macroctx"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -49,13 +50,16 @@ func createContext(delayed macroctx.Delayed, pkg *packages.Package) macroctx.Con
 	}
 }
 
-func createDir(path, output, file string) (string, error) {
+// prepareOutputFile creates output file directory along with any necessary parents
+// and returns absolute path to output file.
+// Output file path is output+filepath.Rel(path, filePath)
+func prepareOutputFile(path, output, filePath string) (string, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return "", err
 	}
 
-	rel, err := filepath.Rel(absPath, file)
+	rel, err := filepath.Rel(absPath, filePath)
 	if err != nil {
 		return "", err
 	}

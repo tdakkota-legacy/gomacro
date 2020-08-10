@@ -1,9 +1,10 @@
 package macro
 
 import (
-	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
+
+	"github.com/tdakkota/gomacro/macroctx"
 
 	"golang.org/x/tools/go/ast/astutil"
 )

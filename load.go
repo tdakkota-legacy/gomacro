@@ -2,11 +2,12 @@ package macro
 
 import (
 	"errors"
-	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
+
+	"github.com/tdakkota/gomacro/macroctx"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -42,4 +43,27 @@ func loadOne(path string) (macroctx.Context, error) {
 	ctx.File = pkg.Syntax[0]
 
 	return ctx, nil
+}
+
+func loadDelayed(pkgs []*packages.Package) macroctx.Delayed {
+	delayed := macroctx.Delayed{}
+	for _, pkg := range pkgs {
+		delayed.Add(pkg)
+	}
+
+	return delayed
+}
+
+func loadComments(decl ast.Decl, imports **ast.GenDecl) (comments *ast.CommentGroup) {
+	switch v := decl.(type) {
+	case *ast.GenDecl:
+		if v.Tok == token.IMPORT {
+			*imports = v
+		}
+		comments = v.Doc
+	case *ast.FuncDecl:
+		comments = v.Doc
+	}
+
+	return
 }

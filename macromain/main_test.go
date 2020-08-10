@@ -1,82 +1,75 @@
 package macromain
 
 import (
-	"bytes"
-	"github.com/tdakkota/gomacro"
-	"github.com/tdakkota/gomacro/macroctx"
-	"go/ast"
-	"go/token"
-	"io/ioutil"
+	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
-	"strconv"
 	"testing"
 	"time"
+
+	"github.com/tdakkota/gomacro"
+	"github.com/tdakkota/gomacro/testutil"
 )
 
-func CreateMacro(value string) macro.HandlerFunc {
-	return func(cursor macroctx.Context, node ast.Node) error {
-		if callExpr, ok := node.(*ast.CallExpr); ok {
-			if f, ok := callExpr.Fun.(*ast.Ident); ok && f.Name == "eval" {
-				for i := range callExpr.Args {
-					switch v := callExpr.Args[i].(type) {
-					case *ast.BasicLit:
-						cursor.Replace(&ast.BasicLit{
-							ValuePos: v.Pos(),
-							Kind:     token.INT,
-							Value:    strconv.Quote(value),
-						})
-					}
-				}
-
-			}
-			return nil
-		}
-
-		return nil
-	}
+func createRewriter(path, output string) (string, macro.ReWriter) {
+	generatedValue := time.Now().String()
+	return generatedValue, macro.NewReWriter(path, output, macro.Macros{
+		"eval": testutil.CreateMacro(generatedValue),
+	}, macro.DefaultPrinter())
 }
 
-func withTempFile(prefix string, cb func(file *os.File) error) error {
-	f, err := ioutil.TempFile("", prefix+".*.go")
+func runRewriteTest(path, outputPath, runPath string, cb func(macro.ReWriter) error) error {
+	generatedValue, rewriter := createRewriter(path, outputPath)
+	err := cb(rewriter)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(f.Name())
-	defer f.Close()
 
-	return cb(f)
+	output, err := testutil.GoToolRun(runPath)
+	if err != nil {
+		return err
+	}
+
+	if generatedValue != output {
+		return fmt.Errorf("expected '%v', got '%v'", generatedValue, output)
+	}
+
+	return nil
 }
 
-var gotool = filepath.Join(runtime.GOROOT(), "bin", "go")
+func TestRewriteTo(t *testing.T) {
+	err := testutil.WithTempFile("test-run", func(f *os.File) error {
+		return runRewriteTest("../testdata/src/eval.go", f.Name(), f.Name(), func(writer macro.ReWriter) error {
+			return writer.RewriteTo(f)
+		})
+	})
 
-func TestRewriter(t *testing.T) {
-	err := withTempFile("test-run", func(f *os.File) error {
-		generatedValue := time.Now().String()
-		err := macro.NewReWriter("../testdata/eval.go", "", macro.Macros{
-			"eval": CreateMacro(generatedValue),
-		}, macro.DefaultPrinter()).RewriteTo(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
-		if err != nil {
-			return err
-		}
+func TestRewriteFile(t *testing.T) {
+	err := testutil.WithTempDir("gomacrotest", func(path string) error {
+		outputFile := filepath.Join(path, "eval.go")
 
-		buf := bytes.NewBuffer(nil)
-		cmd := exec.Command(gotool, "run", f.Name())
-		cmd.Stdout = buf
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			return err
-		}
+		return runRewriteTest("../testdata/src/eval.go", outputFile, outputFile, func(writer macro.ReWriter) error {
+			return writer.Rewrite()
+		})
+	})
 
-		if generatedValue != buf.String() {
-			t.Errorf("expected '%v', got '%v'", generatedValue, buf.String())
-		}
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
-		return nil
+func TestRewriteDir(t *testing.T) {
+	err := testutil.WithTempDir("gomacrotest", func(path string) error {
+		outputFile := filepath.Join(path, "eval.go")
+
+		return runRewriteTest("../testdata/src", path, outputFile, func(writer macro.ReWriter) error {
+			return writer.Rewrite()
+		})
 	})
 
 	if err != nil {

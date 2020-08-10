@@ -2,7 +2,6 @@ package macro
 
 import (
 	"bytes"
-	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
 	"go/token"
 	"io"
@@ -10,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/packages"
+	"github.com/tdakkota/gomacro/macroctx"
 
 	"github.com/tdakkota/gomacro/pragma"
 )
@@ -54,15 +53,6 @@ func (r ReWriter) RewriteTo(w io.Writer) error {
 	return r.runMacro(w, ctx)
 }
 
-func loadDelayed(pkgs []*packages.Package) macroctx.Delayed {
-	delayed := macroctx.Delayed{}
-	for _, pkg := range pkgs {
-		delayed.Add(pkg)
-	}
-
-	return delayed
-}
-
 func (r ReWriter) rewriteDir() error {
 	loadPath := r.path
 	if !strings.HasSuffix(r.path, "/...") {
@@ -82,7 +72,7 @@ func (r ReWriter) rewriteDir() error {
 		for _, file := range pkg.Syntax {
 			ctx.File = file
 
-			outputFile, err := createDir(r.path, r.output, ctx.FileSet.File(file.Pos()).Name())
+			outputFile, err := prepareOutputFile(r.path, r.output, ctx.FileSet.File(file.Pos()).Name())
 			if err != nil {
 				return err
 			}
@@ -132,20 +122,6 @@ func (r ReWriter) rewriteOneFile(output string, ctx macroctx.Context) error {
 	}
 
 	return nil
-}
-
-func loadComments(decl ast.Decl, imports **ast.GenDecl) (comments *ast.CommentGroup) {
-	switch v := decl.(type) {
-	case *ast.GenDecl:
-		if v.Tok == token.IMPORT {
-			*imports = v
-		}
-		comments = v.Doc
-	case *ast.FuncDecl:
-		comments = v.Doc
-	}
-
-	return
 }
 
 func (r ReWriter) runMacro(w io.Writer, context macroctx.Context) error {

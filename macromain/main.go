@@ -4,8 +4,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/tdakkota/gomacro"
 	"os"
+
+	"github.com/tdakkota/gomacro"
 )
 
 func Main(macros macro.Macros) {

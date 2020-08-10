@@ -10,17 +10,16 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
+// Context represent a macro context.
 type Context struct {
 	*astutil.Cursor
 	Pre     bool
 	Delayed Delayed
 	Report  func(Report)
 
-	// AST
 	File    *ast.File
 	FileSet *token.FileSet
 
-	// Types
 	Package    *types.Package
 	TypesInfo  *types.Info
 	TypesSizes types.Sizes
@@ -50,11 +49,15 @@ func importName(s *ast.ImportSpec) string {
 	return n.Name
 }
 
+func importEqual(a, b *ast.ImportSpec) bool {
+	return a.Path.Value == b.Path.Value && importName(a) == importName(b)
+}
+
 func (c Context) AddImports(importSpec ...*ast.ImportSpec) {
 	for _, spec := range importSpec {
 		contains := false
 		for _, imprt := range c.File.Imports {
-			if spec.Path.Value == imprt.Path.Value && importName(spec) == importName(imprt) {
+			if importEqual(spec, imprt) {
 				contains = true
 				break
 			}

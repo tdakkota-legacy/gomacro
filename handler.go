@@ -1,8 +1,9 @@
 package macro
 
 import (
-	"github.com/tdakkota/gomacro/macroctx"
 	"go/ast"
+
+	"github.com/tdakkota/gomacro/macroctx"
 )
 
 type Handler interface {
