@@ -13,7 +13,7 @@ import (
 )
 
 func testDataPath(path string) string {
-	return filepath.Join("./testdata/", path)
+	return filepath.Join("testdata", path)
 }
 
 func createRewriter(path, output string) (string, ReWriter) {

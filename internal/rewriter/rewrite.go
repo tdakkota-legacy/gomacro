@@ -24,7 +24,7 @@ type ReWriter struct {
 	printer      Printer
 }
 
-func NewReWriter(path string, output string, macros macro.Macros, printer Printer) ReWriter {
+func NewReWriter(path, output string, macros macro.Macros, printer Printer) ReWriter {
 	return ReWriter{path: path, output: output, macros: macros, printer: printer}
 }
 
@@ -56,7 +56,7 @@ func (r ReWriter) RewriteTo(w io.Writer) error {
 func (r ReWriter) rewriteDir() error {
 	loadPath := r.path
 	if !strings.HasSuffix(r.path, "/...") {
-		loadPath = loadPath + "/..."
+		loadPath += "/..."
 	}
 
 	pkgs, err := load(loadPath)

@@ -18,10 +18,14 @@ type Context struct {
 	Delayed Delayed
 	Report  func(Report)
 
-	File    *ast.File
+	// Current file.
+	File *ast.File
+	// Current token set.
 	FileSet *token.FileSet
 
-	Package    *types.Package
+	// Current package info.
+	Package *types.Package
+	// Type checker info.
 	TypesInfo  *types.Info
 	TypesSizes types.Sizes
 

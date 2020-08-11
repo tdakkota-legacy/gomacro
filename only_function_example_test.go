@@ -12,7 +12,11 @@ import (
 
 func Macro() macro.Handler {
 	return macro.OnlyFunction("hello", func(ctx macro.Context, call *ast.CallExpr) error {
-		args := append([]ast.Expr{builders.StringLit("hello ")}, call.Args...)
+		args := append([]ast.Expr{builders.StringLit("hello, ")}, call.Args...)
+		if len(call.Args) == 0 {
+			args = append(args, builders.StringLit("world"))
+		}
+
 		toReplace := builders.CallName("println", args...)
 		ctx.Replace(toReplace)
 		return nil
@@ -43,7 +47,7 @@ func writeTempFile(src string) (string, error) {
 	return f.Name(), nil
 }
 
-func Example_OnlyFunction() {
+func Example_onlyFunction() {
 	srcPath, err := writeTempFile(src)
 	if err != nil {
 		panic(err)
@@ -55,11 +59,11 @@ func Example_OnlyFunction() {
 	if err != nil {
 		panic(err)
 	}
-	// Output: package main
+	// package main
 	//
 	// //procm:use=runme
 	// func main() {
-	// 	println("hello ")
+	// 	println("hello, ", "world")
 	//
 	// }
 }
