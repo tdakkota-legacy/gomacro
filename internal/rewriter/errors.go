@@ -1,13 +1,10 @@
-package macro
+package rewriter
 
 import (
-	"errors"
 	"fmt"
 	"go/token"
 	"os"
 )
-
-var ErrStop = errors.New("macro exit")
 
 func NewErrorCallback(fset *token.FileSet) func(pos token.Pos, err error) {
 	return func(pos token.Pos, err error) {

@@ -1,4 +1,4 @@
-package macroctx
+package macro
 
 import (
 	"go/ast"

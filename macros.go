@@ -1,7 +1,9 @@
 package macro
 
+// Macros is name <-> macro handler table.
 type Macros map[string]Handler
 
+// Get returns available macros for given names.
 func (m Macros) Get(names ...string) (result map[string]Handler) {
 	if len(names) == 0 {
 		return map[string]Handler{}

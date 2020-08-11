@@ -1,4 +1,4 @@
-package macro
+package rewriter
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"go/token"
 	"os"
 
-	"github.com/tdakkota/gomacro/macroctx"
+	"github.com/tdakkota/gomacro"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -26,18 +26,18 @@ func load(path ...string) ([]*packages.Package, error) {
 
 var ErrExpectedOnlyOnePackage = errors.New("expected only one package")
 
-func loadOne(path string) (macroctx.Context, error) {
+func loadOne(path string) (macro.Context, error) {
 	pkgs, err := load(path)
 	if err != nil {
-		return macroctx.Context{}, err
+		return macro.Context{}, err
 	}
 
 	if len(pkgs) != 1 {
-		return macroctx.Context{}, ErrExpectedOnlyOnePackage
+		return macro.Context{}, ErrExpectedOnlyOnePackage
 	}
 	pkg := pkgs[0]
 
-	d := macroctx.Delayed{}
+	d := macro.Delayed{}
 	d.Add(pkg)
 	ctx := createContext(d, pkg)
 	ctx.File = pkg.Syntax[0]
@@ -45,8 +45,8 @@ func loadOne(path string) (macroctx.Context, error) {
 	return ctx, nil
 }
 
-func loadDelayed(pkgs []*packages.Package) macroctx.Delayed {
-	delayed := macroctx.Delayed{}
+func loadDelayed(pkgs []*packages.Package) macro.Delayed {
+	delayed := macro.Delayed{}
 	for _, pkg := range pkgs {
 		delayed.Add(pkg)
 	}

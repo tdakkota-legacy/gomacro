@@ -1,10 +1,10 @@
-package macro
+package rewriter
 
 import (
 	"go/ast"
 	"go/token"
 
-	"github.com/tdakkota/gomacro/macroctx"
+	"github.com/tdakkota/gomacro"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
@@ -19,8 +19,8 @@ func NewRunner(fset *token.FileSet) Runner {
 	}
 }
 
-func (r Runner) Run(handler Handler, context macroctx.Context, node ast.Node) ast.Node {
-	context.Report = func(report macroctx.Report) {
+func (r Runner) Run(handler macro.Handler, context macro.Context, node ast.Node) ast.Node {
+	context.Report = func(report macro.Report) {
 		r.Reportf(report.Pos, report.Message)
 	}
 
@@ -38,8 +38,8 @@ func (r Runner) Run(handler Handler, context macroctx.Context, node ast.Node) as
 	}, r.post(handler, context))
 }
 
-func (r Runner) post(handler Handler, context macroctx.Context) astutil.ApplyFunc {
-	context.Report = func(report macroctx.Report) {
+func (r Runner) post(handler macro.Handler, context macro.Context) astutil.ApplyFunc {
+	context.Report = func(report macro.Report) {
 		r.Reportf(report.Pos, report.Message)
 	}
 

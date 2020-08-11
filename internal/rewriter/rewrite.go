@@ -1,4 +1,4 @@
-package macro
+package rewriter
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tdakkota/gomacro/macroctx"
+	"github.com/tdakkota/gomacro"
 
 	"github.com/tdakkota/gomacro/pragma"
 )
@@ -20,11 +20,11 @@ type Printer interface {
 
 type ReWriter struct {
 	path, output string
-	macros       Macros
+	macros       macro.Macros
 	printer      Printer
 }
 
-func NewReWriter(path string, output string, macros Macros, printer Printer) ReWriter {
+func NewReWriter(path string, output string, macros macro.Macros, printer Printer) ReWriter {
 	return ReWriter{path: path, output: output, macros: macros, printer: printer}
 }
 
@@ -96,7 +96,7 @@ func (r ReWriter) rewriteFile() error {
 	return r.rewriteOneFile(r.output, ctx)
 }
 
-func (r ReWriter) rewriteOneFile(output string, ctx macroctx.Context) error {
+func (r ReWriter) rewriteOneFile(output string, ctx macro.Context) error {
 	buf := new(bytes.Buffer)
 	err := r.runMacro(buf, ctx)
 	if err != nil {
@@ -124,7 +124,7 @@ func (r ReWriter) rewriteOneFile(output string, ctx macroctx.Context) error {
 	return nil
 }
 
-func (r ReWriter) runMacro(w io.Writer, context macroctx.Context) error {
+func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 	var imports *ast.GenDecl
 
 	globalPragmas := pragma.ParsePragmas(context.File.Doc)

@@ -1,4 +1,4 @@
-package macro
+package rewriter
 
 import (
 	"go/ast"
@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tdakkota/gomacro/macroctx"
+	"github.com/tdakkota/gomacro"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -40,8 +40,8 @@ func fixImports(imports *ast.GenDecl, file *ast.File) {
 	}
 }
 
-func createContext(delayed macroctx.Delayed, pkg *packages.Package) macroctx.Context {
-	return macroctx.Context{
+func createContext(delayed macro.Delayed, pkg *packages.Package) macro.Context {
+	return macro.Context{
 		FileSet:    pkg.Fset,
 		Package:    pkg.Types,
 		TypesInfo:  pkg.TypesInfo,
