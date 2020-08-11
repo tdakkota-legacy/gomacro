@@ -43,7 +43,7 @@ func writeTempFile(src string) (string, error) {
 	return f.Name(), nil
 }
 
-func ExampleOnlyFunction() {
+func Example_OnlyFunction() {
 	srcPath, err := writeTempFile(src)
 	if err != nil {
 		panic(err)
