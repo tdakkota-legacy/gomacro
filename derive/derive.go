@@ -33,6 +33,7 @@ func NewDerive(context macro.Context, deriveInfo Info) *Derive {
 	}
 }
 
+//nolint: unparam
 func (d *Derive) impl(field base.Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	call, err := d.Impl(field)
 	if err != nil {
@@ -50,6 +51,7 @@ func (d *Derive) dispatch1(field base.Field, typ types.Type, s builders.Statemen
 	return d.dispatch(field, false, typ, s)
 }
 
+//nolint:gocyclo
 func (d *Derive) dispatch(field base.Field, named bool, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	// Types, which will be implemented later
 	if field.TypeName != nil && !d.IsCurrent(typ) {
@@ -174,13 +176,13 @@ func (d *Derive) Struct(field base.Field, typ *types.Struct, s builders.Statemen
 			parentSelector = d.selector
 		}
 
-		field := base.Field{
+		newField := base.Field{
 			TypeName: field.TypeName,
 			Selector: builders.Selector(parentSelector, ast.NewIdent(subField.Name())),
 			Tag:      reflect.StructTag(typ.Tag(i)),
 		}
 
-		s, err = d.dispatch1(field, subField.Type(), s)
+		s, err = d.dispatch1(newField, subField.Type(), s)
 		if err != nil {
 			return s, err
 		}
