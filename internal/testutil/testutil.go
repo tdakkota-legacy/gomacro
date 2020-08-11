@@ -19,8 +19,7 @@ func CreateMacro(value string) macro.HandlerFunc {
 		if callExpr, ok := node.(*ast.CallExpr); ok {
 			if f, ok := callExpr.Fun.(*ast.Ident); ok && f.Name == "eval" {
 				for i := range callExpr.Args {
-					switch v := callExpr.Args[i].(type) {
-					case *ast.BasicLit:
+					if v, ok := callExpr.Args[i].(*ast.BasicLit); ok {
 						cursor.Replace(&ast.BasicLit{
 							ValuePos: v.Pos(),
 							Kind:     token.INT,

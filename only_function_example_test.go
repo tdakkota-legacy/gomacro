@@ -59,7 +59,7 @@ func Example_onlyFunction() {
 	if err != nil {
 		panic(err)
 	}
-	// package main
+	// Output: package main
 	//
 	// //procm:use=runme
 	// func main() {

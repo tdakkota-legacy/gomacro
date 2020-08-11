@@ -22,6 +22,7 @@ linters-settings:
       - wrapperFunc
       - commentedOutCode
       - hugeParam
+      - unnamedResult
   gocyclo:
     min-complexity: 15
   golint:

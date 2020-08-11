@@ -31,7 +31,7 @@ func Run(path, output string, macros macro.Macros) error {
 	})
 }
 
-/// Run runs given macros using path and writes result to writer.
+// Run runs given macros using path and writes result to writer.
 func Print(path string, w io.Writer, macros macro.Macros) error {
 	return run(path, "", macros, func(r rewriter.ReWriter) error {
 		return r.RewriteTo(w)

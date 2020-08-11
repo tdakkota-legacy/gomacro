@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:scopelint
 func Test_parsePragma(t *testing.T) {
 	tests := []struct {
 		pair      string
