@@ -11,6 +11,9 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
+// ErrStop is special error to interrupt AST traversal.
+var ErrStop = errors.New("macro exit")
+
 // Context is a macro context.
 type Context struct {
 	*astutil.Cursor
@@ -79,5 +82,3 @@ func (c Context) AddImports(importSpec ...*ast.ImportSpec) {
 		}
 	}
 }
-
-var ErrStop = errors.New("macro exit")

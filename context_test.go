@@ -1,6 +1,7 @@
 package macro
 
 import (
+	builders "github.com/tdakkota/astbuilders"
 	"go/ast"
 	"testing"
 
@@ -43,4 +44,26 @@ func Test_importEqual(t *testing.T) {
 
 		require.False(t, importEqual(a, b))
 	})
+}
+
+func TestContext_AddImports(t *testing.T) {
+	ctxt := Context{
+		File: &ast.File{},
+	}
+
+	imprt := builders.Import("github.com/tdakkota/astbuilders")
+	ctxt.AddImports(imprt)
+
+	a := require.New(t)
+	a.Len(ctxt.File.Imports, 1)
+	a.Equal(ctxt.File.Imports[0], imprt)
+
+	ctxt.AddImports(imprt)
+	a.Len(ctxt.File.Imports, 1)
+	a.Equal(ctxt.File.Imports[0], imprt)
+
+	imprt2 := builders.Import("fmt")
+	ctxt.AddImports(imprt2)
+	a.Len(ctxt.File.Imports, 2)
+	a.Equal(ctxt.File.Imports[1], imprt2)
 }
