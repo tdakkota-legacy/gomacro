@@ -3,37 +3,40 @@ package testutil
 import (
 	"bytes"
 	"go/ast"
-	"go/token"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 
+	builders "github.com/tdakkota/astbuilders"
 	"github.com/tdakkota/gomacro"
 )
 
+func call(node ast.Node, name string, cb func(callExpr *ast.CallExpr) error) error {
+	if callExpr, ok := node.(*ast.CallExpr); ok {
+		if ident, ok := callExpr.Fun.(*ast.Ident); ok && ident.Name == name {
+			return cb(callExpr)
+		}
+	}
+
+	return nil
+}
+
 func CreateMacro(value string) macro.HandlerFunc {
 	return func(cursor macro.Context, node ast.Node) error {
-		if callExpr, ok := node.(*ast.CallExpr); ok {
-			if f, ok := callExpr.Fun.(*ast.Ident); ok && f.Name == "eval" {
-				for i := range callExpr.Args {
-					if v, ok := callExpr.Args[i].(*ast.BasicLit); ok {
-						cursor.Replace(&ast.BasicLit{
-							ValuePos: v.Pos(),
-							Kind:     token.INT,
-							Value:    strconv.Quote(value),
-						})
-					}
+		return call(node, "eval", func(callExpr *ast.CallExpr) error {
+			for i := range callExpr.Args {
+				if v, ok := callExpr.Args[i].(*ast.BasicLit); ok {
+					lit := builders.StringLit(value)
+					lit.ValuePos = v.Pos()
+					cursor.Replace(lit)
 				}
-
 			}
-			return nil
-		}
 
-		return nil
+			return nil
+		})
 	}
 }
 
