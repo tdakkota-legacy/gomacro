@@ -3,8 +3,10 @@ package derive
 import (
 	"fmt"
 	"go/ast"
+	"go/parser"
 	"go/types"
 	"reflect"
+	"strings"
 
 	builders "github.com/tdakkota/astbuilders"
 	"github.com/tdakkota/gomacro"
@@ -18,6 +20,7 @@ type Derive struct {
 	delayed      macro.DelayedTypes
 	first        bool
 	typeSpec     *ast.TypeSpec
+	replacer     *strings.Replacer
 	selector     *ast.Ident
 	arrayBitSize int
 }
@@ -28,6 +31,7 @@ func NewDerive(context macro.Context, deriveInfo Info) *Derive {
 		Info:         deriveInfo,
 		delayed:      context.Delayed[deriveInfo.macroName],
 		first:        true,
+		replacer:     strings.NewReplacer("$m", "m"),
 		selector:     ast.NewIdent("m"),
 		arrayBitSize: 8,
 	}
@@ -47,7 +51,25 @@ func (d *Derive) IsCurrent(typ types.Type) bool {
 	return types.AssignableTo(typ, d.TypesInfo.TypeOf(d.typeSpec.Name))
 }
 
+func (d *Derive) interpolate(s string) (ast.Expr, error) {
+	s = d.replacer.Replace(s)
+	return parser.ParseExpr(s)
+}
+
 func (d *Derive) dispatch1(field base.Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+	if v, ok := field.Tag.Lookup("if"); ok {
+		expr, err := d.interpolate(v)
+		if err != nil {
+			return s, fmt.Errorf("failed to parse expression: %w", err)
+		}
+
+		s = s.If(nil, expr, func(body builders.StatementBuilder) builders.StatementBuilder {
+			body, err = d.dispatch(field, false, typ, body)
+			return body
+		})
+
+		return s, err
+	}
 	return d.dispatch(field, false, typ, s)
 }
 

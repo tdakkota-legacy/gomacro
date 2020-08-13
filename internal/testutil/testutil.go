@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"go/ast"
 	"go/token"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -57,17 +58,17 @@ func WithTempDir(prefix string, cb func(path string) error) error {
 	return cb(dirPath)
 }
 
-func GoToolRun(filename string) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	cmd := exec.Command(GoTool, "run", filename)
-	cmd.Stdout = buf
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return "", err
-	}
+var GoTool = filepath.Join(runtime.GOROOT(), "bin", "go")
 
-	return buf.String(), nil
+func RunGoTool(output io.Writer, args ...string) error {
+	cmd := exec.Command(GoTool, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = output
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
-var GoTool = filepath.Join(runtime.GOROOT(), "bin", "go")
+func GoRun(filename string) (string, error) {
+	buf := bytes.NewBuffer(nil)
+	return buf.String(), RunGoTool(buf, "run", filename)
+}

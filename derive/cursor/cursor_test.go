@@ -2,6 +2,7 @@ package cursor
 
 import (
 	"go/ast"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -38,7 +39,7 @@ func TestCursor(t *testing.T) {
 			return err
 		}
 
-		_, err = testutil.GoToolRun(outputFile)
+		err = testutil.RunGoTool(os.Stdout, "run", outputFile)
 		if err != nil {
 			return err
 		}

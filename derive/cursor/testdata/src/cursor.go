@@ -9,6 +9,13 @@ import (
 	"github.com/tdakkota/cursor"
 )
 
+func equalBytes(a, b []byte) {
+	if !bytes.Equal(a, b) {
+		fmt.Println(a, "\n", b)
+		panic("expected equal")
+	}
+}
+
 //procm:use=derive_binary
 type Flag byte
 
@@ -41,7 +48,7 @@ type testStruct struct {
 	flag       Flag
 }
 
-func data() (testStruct, []byte) {
+func testStructData() (testStruct, []byte) {
 	return testStruct{
 			10,
 			1,
@@ -87,8 +94,8 @@ func data() (testStruct, []byte) {
 		}
 }
 
-func main() {
-	s, b := data()
+func testStructTest() {
+	s, b := testStructData()
 
 	cur := cursor.NewCursor(nil)
 	err := s.Append(cur)
@@ -96,9 +103,41 @@ func main() {
 		panic(err)
 	}
 
-	if !bytes.Equal(b, cur.Buffer()) {
-		fmt.Println(b)
-		fmt.Println(cur.Buffer())
-		panic("expected equal")
+	equalBytes(b, cur.Buffer())
+}
+
+//procm:use=derive_binary
+type conditional struct {
+	predicate int8
+	value     int8 `if:"$m.predicate >= 10"`
+}
+
+func testConditional() {
+	s, b := conditional{10, 42}, []byte{10, 42}
+
+	cur := cursor.NewCursor(nil)
+	err := s.Append(cur)
+	if err != nil {
+		panic(err)
 	}
+
+	equalBytes(b, cur.Buffer())
+}
+
+func testConditional2() {
+	s, b := conditional{4, 0}, []byte{4}
+
+	cur := cursor.NewCursor(nil)
+	err := s.Append(cur)
+	if err != nil {
+		panic(err)
+	}
+
+	equalBytes(b, cur.Buffer())
+}
+
+func main() {
+	testStructTest()
+	testConditional()
+	testConditional2()
 }
