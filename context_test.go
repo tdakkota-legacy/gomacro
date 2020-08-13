@@ -1,9 +1,10 @@
 package macro
 
 import (
-	builders "github.com/tdakkota/astbuilders"
 	"go/ast"
 	"testing"
+
+	builders "github.com/tdakkota/astbuilders"
 
 	"github.com/stretchr/testify/require"
 )

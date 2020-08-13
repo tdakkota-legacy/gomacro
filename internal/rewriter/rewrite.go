@@ -138,17 +138,17 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 
 		localMacros := r.macros.Get(pragmas.Use()...)
 		rewrites += len(localMacros)
-		for _, macro := range localMacros {
+		for _, handler := range localMacros {
 			context.Pragmas = pragmas
-			macroRunner.Run(macro, context, decl)
+			macroRunner.Run(handler, context, decl)
 		}
 
-		for name, macro := range globalMacros {
+		for name, handler := range globalMacros {
 			if _, ok := localMacros[name]; ok {
 				continue
 			}
 			context.Pragmas = pragmas
-			macroRunner.Run(macro, context, decl)
+			macroRunner.Run(handler, context, decl)
 		}
 	}
 
