@@ -13,5 +13,5 @@ type Array struct {
 }
 
 type ArrayDerive interface {
-	Array(d base.Derive, field base.Field, arr Array) (*ast.BlockStmt, error)
+	Array(d base.Dispatcher, field base.Field, arr Array) (*ast.BlockStmt, error)
 }

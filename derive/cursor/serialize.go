@@ -39,7 +39,7 @@ func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockS
 	return s.CompleteAsBlock(), nil
 }
 
-func (m *Serialize) Array(d base.Derive, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
+func (m *Serialize) Array(d base.Dispatcher, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 
 	if arr.Size <= -1 {

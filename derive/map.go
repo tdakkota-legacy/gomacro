@@ -13,5 +13,5 @@ type Map struct {
 }
 
 type MapDerive interface {
-	Map(d base.Derive, field base.Field, m Map) (*ast.BlockStmt, error)
+	Map(d base.Dispatcher, field base.Field, m Map) (*ast.BlockStmt, error)
 }

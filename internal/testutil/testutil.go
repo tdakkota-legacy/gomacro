@@ -73,5 +73,10 @@ func RunGoTool(output io.Writer, args ...string) error {
 
 func GoRun(filename string) (string, error) {
 	buf := bytes.NewBuffer(nil)
-	return buf.String(), RunGoTool(buf, "run", filename)
+
+	if err := RunGoTool(buf, "run", filename); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

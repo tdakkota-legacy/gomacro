@@ -45,7 +45,7 @@ func (m *Deserialize) CallFor(field base.Field, kind types.BasicKind) (*ast.Bloc
 	return s.CompleteAsBlock(), nil
 }
 
-func (m *Deserialize) Array(d base.Derive, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
+func (m *Deserialize) Array(d base.Dispatcher, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 	size := ast.NewIdent("n")
 
