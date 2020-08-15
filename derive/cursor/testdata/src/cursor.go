@@ -16,6 +16,28 @@ func equalBytes(a, b []byte) {
 	}
 }
 
+type codec interface {
+	cursor.Appender
+	cursor.Scanner
+}
+
+func testCursor(s codec, data []byte) {
+	cur := cursor.NewCursor(nil)
+	err := s.Append(cur)
+	if err != nil {
+		panic(err)
+	}
+
+	equalBytes(data, cur.Buffer())
+
+	// test unmarshal
+	cur = cursor.NewCursor(cur.Buffer())
+	err = s.Scan(cur)
+	if err != nil {
+		panic(err)
+	}
+}
+
 //procm:use=derive_binary
 type Flag byte
 
@@ -48,8 +70,8 @@ type testStruct struct {
 	flag       Flag
 }
 
-func testStructData() (testStruct, []byte) {
-	return testStruct{
+func testStructData() (*testStruct, []byte) {
+	return &testStruct{
 			10,
 			1,
 			2,
@@ -95,15 +117,7 @@ func testStructData() (testStruct, []byte) {
 }
 
 func testStructTest() {
-	s, b := testStructData()
-
-	cur := cursor.NewCursor(nil)
-	err := s.Append(cur)
-	if err != nil {
-		panic(err)
-	}
-
-	equalBytes(b, cur.Buffer())
+	testCursor(testStructData())
 }
 
 //procm:use=derive_binary
@@ -113,31 +127,11 @@ type conditional struct {
 }
 
 func testConditional() {
-	s, b := conditional{10, 42}, []byte{10, 42}
-
-	cur := cursor.NewCursor(nil)
-	err := s.Append(cur)
-	if err != nil {
-		panic(err)
-	}
-
-	equalBytes(b, cur.Buffer())
-}
-
-func testConditional2() {
-	s, b := conditional{4, 0}, []byte{4}
-
-	cur := cursor.NewCursor(nil)
-	err := s.Append(cur)
-	if err != nil {
-		panic(err)
-	}
-
-	equalBytes(b, cur.Buffer())
+	testCursor(&conditional{10, 42}, []byte{10, 42})
+	testCursor(&conditional{4, 0}, []byte{4})
 }
 
 func main() {
 	testStructTest()
 	testConditional()
-	testConditional2()
 }
