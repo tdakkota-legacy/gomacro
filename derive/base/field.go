@@ -4,10 +4,25 @@ import (
 	"go/ast"
 	"go/types"
 	"reflect"
+	"strings"
 )
+
+type Tag string
+
+func (t Tag) Lookup(s string) (string, bool) {
+	split := strings.Split(string(t), ",")
+
+	for i := range split {
+		if v, ok := reflect.StructTag(split[i]).Lookup(s); ok {
+			return v, true
+		}
+	}
+
+	return "", false
+}
 
 type Field struct {
 	TypeName *types.TypeName
-	Tag      reflect.StructTag
+	Tag      Tag
 	Selector ast.Expr
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
-	"reflect"
 
 	builders "github.com/tdakkota/astbuilders"
 	"github.com/tdakkota/gomacro"
@@ -14,11 +13,11 @@ import (
 type Derive struct {
 	macro.Context
 	Info
+	Interpolator Interpolator
 
 	delayed      macro.DelayedTypes
 	first        bool
 	typeSpec     *ast.TypeSpec
-	interpolator interpolator
 	selector     *ast.Ident
 	arrayBitSize int
 }
@@ -29,7 +28,7 @@ func NewDerive(context macro.Context, deriveInfo Info) *Derive {
 		Info:         deriveInfo,
 		delayed:      context.Delayed[deriveInfo.macroName],
 		first:        true,
-		interpolator: newInterpolator("$m", "m"),
+		Interpolator: NewInterpolator(context.TypesInfo, "$m", "m"),
 		selector:     ast.NewIdent("m"),
 		arrayBitSize: 8,
 	}
@@ -50,8 +49,14 @@ func (d *Derive) IsCurrent(typ types.Type) bool {
 }
 
 func (d *Derive) dispatch1(field base.Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+	// skip tag
+	if _, ok := field.Tag.Lookup("skip"); ok {
+		return s, nil
+	}
+
+	// if tag
 	if v, ok := field.Tag.Lookup("if"); ok {
-		expr, err := d.interpolator.Expr(v)
+		expr, err := d.Interpolator.ExprExpectInfo(v, types.IsBoolean)
 		if err != nil {
 			return s, fmt.Errorf("failed to parse expression: %w", err)
 		}
@@ -63,6 +68,7 @@ func (d *Derive) dispatch1(field base.Field, typ types.Type, s builders.Statemen
 
 		return s, err
 	}
+
 	return d.dispatch(field, false, typ, s)
 }
 
@@ -194,7 +200,7 @@ func (d *Derive) Struct(field base.Field, typ *types.Struct, s builders.Statemen
 		newField := base.Field{
 			TypeName: field.TypeName,
 			Selector: builders.Selector(parentSelector, ast.NewIdent(subField.Name())),
-			Tag:      reflect.StructTag(typ.Tag(i)),
+			Tag:      base.Tag(typ.Tag(i)),
 		}
 
 		s, err = d.dispatch1(newField, subField.Type(), s)
