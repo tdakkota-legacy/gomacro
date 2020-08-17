@@ -156,12 +156,5 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 		fixImports(imports, context.File)
 	}
 
-	if rewrites > 0 {
-		err := r.printer.PrintFile(w, context.FileSet, context.File)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return r.printer.PrintFile(w, context.FileSet, context.File)
 }
