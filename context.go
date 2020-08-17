@@ -3,11 +3,9 @@ package macro
 import (
 	"errors"
 	"fmt"
+	"github.com/tdakkota/gomacro/pragma"
 	"go/ast"
 	"go/token"
-	"go/types"
-
-	"github.com/tdakkota/gomacro/pragma"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
@@ -20,18 +18,10 @@ type Context struct {
 	Pre     bool
 	Delayed Delayed
 	Report  func(Report)
-
-	// Current file.
-	File *ast.File
-	// Current token set.
-	FileSet *token.FileSet
-
-	// Current package info.
-	Package *types.Package
-	// Type checker info.
-	TypesInfo  *types.Info
-	TypesSizes types.Sizes
-
+	// AST objects.
+	ASTInfo
+	// Type checker objects.
+	TypeInfo
 	// Parsed magic comments.
 	Pragmas pragma.Pragmas
 }

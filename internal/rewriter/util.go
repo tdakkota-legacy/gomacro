@@ -42,11 +42,16 @@ func fixImports(imports *ast.GenDecl, file *ast.File) {
 
 func createContext(delayed macro.Delayed, pkg *packages.Package) macro.Context {
 	return macro.Context{
-		FileSet:    pkg.Fset,
-		Package:    pkg.Types,
-		TypesInfo:  pkg.TypesInfo,
-		TypesSizes: pkg.TypesSizes,
-		Delayed:    delayed,
+		ASTInfo: macro.ASTInfo{
+			FileSet: pkg.Fset,
+		},
+		TypeInfo: macro.TypeInfo{
+			Package:    pkg.Types,
+			TypesInfo:  pkg.TypesInfo,
+			TypesSizes: pkg.TypesSizes,
+		},
+
+		Delayed: delayed,
 	}
 }
 

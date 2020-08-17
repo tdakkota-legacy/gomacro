@@ -49,7 +49,9 @@ func Test_importEqual(t *testing.T) {
 
 func TestContext_AddImports(t *testing.T) {
 	ctxt := Context{
-		File: &ast.File{},
+		ASTInfo: ASTInfo{
+			File: &ast.File{},
+		},
 	}
 
 	imprt := builders.Import("github.com/tdakkota/astbuilders")
