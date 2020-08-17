@@ -42,20 +42,15 @@ func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockS
 func (m *Serialize) Array(d base.Dispatcher, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 
-	var length ast.Expr
 	if v, ok := field.Tag.Lookup("length"); ok {
-		expr, err := m.Derive.Interpolator.ExprExpectInfo(v, types.IsInteger)
+		_, err := m.Derive.Interpolator.ExprExpectInfo(v, types.IsInteger)
 		if err != nil {
 			return nil, err
 		}
-
-		length = expr
-	} else {
-		if arr.Size <= -1 {
-			length = builders.Cast(builders.IdentOfKind(types.Uint8), builders.Len(field.Selector))
-			s = s.Define(builders.Err())(builders.CallPackage("cur", "WriteUint8", length))
-			s = checkErr(s)
-		}
+	} else if arr.Size <= -1 {
+		length := builders.Cast(builders.IdentOfKind(types.Uint8), builders.Len(field.Selector))
+		s = s.Define(builders.Err())(builders.CallPackage("cur", "WriteUint8", length))
+		s = checkErr(s)
 	}
 
 	var err error
