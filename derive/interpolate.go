@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/token"
 	"go/types"
 	"strings"
 )
 
 type Interpolator struct {
-	info     *types.Info
+	derive   *Derive
 	replacer *strings.Replacer
 }
 
-func NewInterpolator(info *types.Info, a ...string) Interpolator {
-	return Interpolator{info: info, replacer: strings.NewReplacer(a...)}
+func NewInterpolator(derive *Derive, a ...string) Interpolator {
+	return Interpolator{derive: derive, replacer: strings.NewReplacer(a...)}
 }
 
 // Interpolate interpolates given string.
@@ -37,7 +38,11 @@ func (i Interpolator) ExprExpectKind(s string, kind types.BasicKind) (ast.Expr, 
 		return nil, err
 	}
 
-	typ := i.info.TypeOf(expr)
+	typ, err := i.typeCheck(expr)
+	if err != nil {
+		return nil, err
+	}
+
 	b, ok := typ.(*types.Basic)
 	if !ok || b.Kind()&kind == 0 {
 		return nil, fmt.Errorf("%w type %v, got type %v '%v'", ErrExpected, kind, typ, s)
@@ -53,11 +58,29 @@ func (i Interpolator) ExprExpectInfo(s string, info types.BasicInfo) (ast.Expr, 
 		return nil, err
 	}
 
-	typ := i.info.TypeOf(expr)
+	typ, err := i.typeCheck(expr)
+	if err != nil {
+		return nil, err
+	}
+
 	b, ok := typ.(*types.Basic)
 	if !ok || b.Info()&info == 0 {
 		return nil, fmt.Errorf("%w type %v, got type %v '%v'", ErrExpected, info, typ, s)
 	}
 
 	return expr, nil
+}
+
+func (i Interpolator) typeCheck(expr ast.Expr) (types.Type, error) {
+	scope := i.derive.Package.Scope()
+	scope.Insert(types.NewVar(0, i.derive.Package, "m", i.derive.obj.Type()))
+	err := types.CheckExpr(token.NewFileSet(), i.derive.Package, 0, expr, i.derive.TypesInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	typ := i.derive.TypesInfo.Types[expr]
+	delete(i.derive.TypesInfo.Types, expr)
+
+	return typ.Type, nil
 }

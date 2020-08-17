@@ -23,7 +23,7 @@ func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockS
 	s := builders.NewStatementBuilder()
 	name := "Write" + strings.Title(types.Typ[kind].String())
 
-	results := []ast.Expr{ast.NewIdent("err")}
+	results := []ast.Expr{builders.Err()}
 	if kind == types.String {
 		results = append([]ast.Expr{ast.NewIdent("_")}, results...)
 	}
@@ -42,10 +42,20 @@ func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockS
 func (m *Serialize) Array(d base.Dispatcher, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 
-	if arr.Size <= -1 {
-		length := builders.Cast(builders.IdentOfKind(types.Uint8), builders.Len(field.Selector))
-		s = s.Define(ast.NewIdent("err"))(builders.CallPackage("cur", "WriteUint8", length))
-		s = checkErr(s)
+	var length ast.Expr
+	if v, ok := field.Tag.Lookup("length"); ok {
+		expr, err := m.Derive.Interpolator.ExprExpectInfo(v, types.IsInteger)
+		if err != nil {
+			return nil, err
+		}
+
+		length = expr
+	} else {
+		if arr.Size <= -1 {
+			length = builders.Cast(builders.IdentOfKind(types.Uint8), builders.Len(field.Selector))
+			s = s.Define(builders.Err())(builders.CallPackage("cur", "WriteUint8", length))
+			s = checkErr(s)
+		}
 	}
 
 	var err error
@@ -94,7 +104,7 @@ func (m *Serialize) Callback(context macro.Context, node ast.Node) error {
 
 		builder := CreateFunction("Append", typeSpec.Name, func(s builders.StatementBuilder) builders.StatementBuilder {
 			s, err = m.Derive.Derive(typeSpec, s)
-			return s.Return(ast.NewIdent("nil"))
+			return s.Return(builders.Nil())
 		})
 
 		context.AddDecls(builder.CompleteAsDecl())

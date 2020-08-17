@@ -17,21 +17,25 @@ type Derive struct {
 
 	delayed      macro.DelayedTypes
 	first        bool
+	obj          *types.TypeName
 	typeSpec     *ast.TypeSpec
 	selector     *ast.Ident
 	arrayBitSize int
 }
 
 func NewDerive(context macro.Context, deriveInfo Info) *Derive {
-	return &Derive{
+	selector := ast.NewIdent("m")
+	d := &Derive{
 		Context:      context,
 		Info:         deriveInfo,
 		delayed:      context.Delayed[deriveInfo.macroName],
 		first:        true,
-		Interpolator: NewInterpolator(context.TypesInfo, "$m", "m"),
-		selector:     ast.NewIdent("m"),
+		selector:     selector,
 		arrayBitSize: 8,
 	}
+
+	d.Interpolator = NewInterpolator(d, "$m", selector.Name)
+	return d
 }
 
 //nolint: unparam
@@ -135,10 +139,12 @@ func (d *Derive) Dispatch(field base.Field, typ types.Type, s builders.Statement
 func (d *Derive) Derive(t *ast.TypeSpec, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	d.typeSpec = t
 
+	d.obj = d.TypesInfo.ObjectOf(d.typeSpec.Name).(*types.TypeName)
 	field := base.Field{
-		TypeName: d.TypesInfo.ObjectOf(d.typeSpec.Name).(*types.TypeName),
+		TypeName: d.obj,
 		Selector: d.selector,
 	}
+
 	return d.dispatch1(field, d.TypesInfo.TypeOf(d.typeSpec.Name), s)
 }
 

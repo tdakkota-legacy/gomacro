@@ -25,7 +25,7 @@ func (m *Deserialize) CallFor(field base.Field, kind types.BasicKind) (*ast.Bloc
 	name := "Read" + strings.Title(types.Typ[kind].String())
 
 	var tmp ast.Expr = ast.NewIdent("tmp")
-	s = s.Define(tmp, ast.NewIdent("err"))(builders.CallPackage("cur", name))
+	s = s.Define(tmp, builders.Err())(builders.CallPackage("cur", name))
 	s = checkErr(s)
 
 	if field.TypeName != nil {
@@ -49,11 +49,20 @@ func (m *Deserialize) Array(d base.Dispatcher, field base.Field, arr derive.Arra
 	s := builders.NewStatementBuilder()
 	size := ast.NewIdent("n")
 
-	if arr.Size <= -1 {
-		s = s.Define(size, ast.NewIdent("err"))(builders.CallPackage("cur", "ReadUint8"))
-		s = checkErr(s)
+	if v, ok := field.Tag.Lookup("length"); ok {
+		expr, err := m.Derive.Interpolator.ExprExpectInfo(v, types.IsInteger)
+		if err != nil {
+			return nil, err
+		}
+
+		s = s.Define(size)(expr)
 	} else {
-		s = s.Define(size)(builders.IntegerLit(int(arr.Size)))
+		if arr.Size <= -1 {
+			s = s.Define(size, builders.Err())(builders.CallPackage("cur", "ReadUint8"))
+			s = checkErr(s)
+		} else {
+			s = s.Define(size)(builders.IntegerLit(int(arr.Size)))
+		}
 	}
 
 	i := ast.NewIdent("i")
@@ -108,7 +117,7 @@ func (m *Deserialize) Callback(context macro.Context, node ast.Node) error {
 
 		builder := CreateFunction("Scan", builders.RefFor(typeSpec.Name), func(s builders.StatementBuilder) builders.StatementBuilder {
 			s, err = m.Derive.Derive(typeSpec, s)
-			return s.Return(ast.NewIdent("nil"))
+			return s.Return(builders.Nil())
 		})
 
 		context.AddDecls(builder.CompleteAsDecl())
