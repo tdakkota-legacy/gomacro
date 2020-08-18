@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"reflect"
 	"time"
 
 	"github.com/tdakkota/cursor"
@@ -21,6 +22,20 @@ type codec interface {
 	cursor.Scanner
 }
 
+func reset(p interface{}) interface{} {
+	var isPtr bool
+	v := reflect.ValueOf(p)
+	for v.Kind() == reflect.Ptr {
+		isPtr = true
+		v = v.Elem()
+	}
+	if isPtr {
+		return reflect.New(v.Type()).Interface()
+	}
+
+	return reflect.Zero(v.Type()).Interface()
+}
+
 func testCursor(s codec, data []byte) {
 	cur := cursor.NewCursor(nil)
 	err := s.Append(cur)
@@ -30,6 +45,7 @@ func testCursor(s codec, data []byte) {
 
 	equalBytes(data, cur.Buffer())
 
+	s = reset(s).(codec)
 	// test unmarshal
 	cur = cursor.NewCursor(cur.Buffer())
 	err = s.Scan(cur)
@@ -65,6 +81,7 @@ type testStruct struct {
 	selfCycle []testStruct
 
 	dur        time.Duration
+	arrayDur   []time.Duration
 	importable image.Point
 	cycle      cycle
 	flag       Flag
@@ -89,6 +106,7 @@ func testStructData() (*testStruct, []byte) {
 			"abc",
 			nil,
 			10,
+			[]time.Duration{},
 			image.Point{X: 3, Y: 4},
 			cycle{},
 			9,
@@ -110,6 +128,7 @@ func testStructData() (*testStruct, []byte) {
 			3, 'a', 'b', 'c', // string
 			0,                       // selfCycle
 			10, 0, 0, 0, 0, 0, 0, 0, // dur
+			0,
 			3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, // importable
 			0, // cycle
 			9, // flag

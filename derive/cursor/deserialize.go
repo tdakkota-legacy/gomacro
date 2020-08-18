@@ -45,6 +45,18 @@ func (m *Deserialize) CallFor(field base.Field, kind types.BasicKind) (*ast.Bloc
 	return s.CompleteAsBlock(), nil
 }
 
+func (m *Deserialize) createArray(size, sel ast.Expr, elem types.Type, s builders.StatementBuilder) builders.StatementBuilder {
+	typ := types.TypeString(elem, func(i *types.Package) string {
+		if i.Path() != m.Derive.Package.Path() {
+			return i.Name()
+		}
+		return ""
+	})
+	ident := ast.NewIdent(typ)
+
+	return s.Assign(sel)(token.ASSIGN)(builders.MakeExpr(builders.SliceOf(ident), size, nil))
+}
+
 func (m *Deserialize) Array(d base.Dispatcher, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 	size := ast.NewIdent("n")
@@ -56,10 +68,12 @@ func (m *Deserialize) Array(d base.Dispatcher, field base.Field, arr derive.Arra
 		}
 
 		s = s.Define(size)(expr)
+		s = m.createArray(size, field.Selector, arr.Elem, s)
 	} else {
 		if arr.Size <= -1 {
 			s = s.Define(size, builders.Err())(builders.CallPackage("cur", "ReadUint8"))
 			s = checkErr(s)
+			s = m.createArray(size, field.Selector, arr.Elem, s)
 		} else {
 			s = s.Define(size)(builders.IntegerLit(int(arr.Size)))
 		}
