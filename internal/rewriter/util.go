@@ -32,6 +32,16 @@ func urlRel(basePath, targetPath string) (string, error) {
 	}
 }
 
+// Output path is to+filepath.Rel(from, rel)
+func changePathBase(from, to, rel string) (string, error) {
+	relative, err := filepath.Rel(from, rel)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(to, relative), nil
+}
+
 // prepareOutputFile creates output file directory along with any necessary parents
 // and returns absolute path to output file.
 // Output file path is output+filepath.Rel(source, filePath)
@@ -41,12 +51,11 @@ func prepareOutputFile(source, output, filePath string) (string, error) {
 		return "", err
 	}
 
-	rel, err := filepath.Rel(absPath, filePath)
+	outputFile, err := changePathBase(absPath, output, filePath)
 	if err != nil {
 		return "", err
 	}
 
-	outputFile := filepath.Join(output, rel)
 	err = os.MkdirAll(filepath.Dir(outputFile), os.ModePerm)
 	if err != nil {
 		return "", err

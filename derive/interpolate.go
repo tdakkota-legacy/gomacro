@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"go/types"
 	"strings"
+	"unsafe"
 )
 
 type Interpolator struct {
@@ -71,10 +72,39 @@ func (i Interpolator) ExprExpectInfo(s string, info types.BasicInfo) (ast.Expr, 
 	return expr, nil
 }
 
+// Copy of *types.Package
+//nolint:structcheck
+type typesPkg struct {
+	path     string
+	name     string
+	scope    *types.Scope
+	complete bool
+	imports  []*types.Package
+	fake     bool // scope lookup errors are silently dropped if package is fake (internal use only)
+	cgo      bool // uses of this package will be rewritten into uses of declarations from _cgo_gotypes.go
+}
+
+func patchPackage(oldPkg *types.Package, typ types.Type) *types.Package {
+	// create a copy
+	pkg := types.NewPackage(oldPkg.Path(), oldPkg.Name())
+	// create a child scope
+	scope := types.NewScope(oldPkg.Scope(), 0, 0, "")
+	// add receiver record
+	scope.Insert(types.NewVar(0, oldPkg, "m", typ))
+	// change scope of copy
+	// TODO: find a better way to create a immutable package
+	(*typesPkg)(unsafe.Pointer(pkg)).scope = scope
+	return pkg
+}
+
+func (i Interpolator) patchPackage() *types.Package {
+	return patchPackage(i.derive.Package, i.derive.obj.Type())
+}
+
 func (i Interpolator) typeCheck(expr ast.Expr) (types.Type, error) {
-	scope := i.derive.Package.Scope()
-	scope.Insert(types.NewVar(0, i.derive.Package, "m", i.derive.obj.Type()))
-	err := types.CheckExpr(token.NewFileSet(), i.derive.Package, 0, expr, i.derive.TypesInfo)
+	pkg := i.patchPackage()
+
+	err := types.CheckExpr(token.NewFileSet(), pkg, 0, expr, i.derive.TypesInfo)
 	if err != nil {
 		return nil, err
 	}

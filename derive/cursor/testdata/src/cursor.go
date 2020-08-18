@@ -123,20 +123,30 @@ func testStructTest() {
 //procm:use=derive_binary
 type attr struct {
 	predicate int8
-	value     int8   `if:"$m.predicate >= 10"`
-	array     []int8 `length:"uint8($m.predicate)"`
-	skip      int    `skip:""`
+	value     int8 `if:"$m.predicate >= 10"`
+	skip      int  `skip:""`
+}
+
+//procm:use=derive_binary
+type attrArray struct {
+	length int8
+	array  []int8 `length:"uint8($m.length)"`
 }
 
 func testConditional() {
 	testCursor(
-		&attr{10, 42, []int8{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 11},
-		[]byte{10, 42, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+		&attr{10, 42, 11},
+		[]byte{10, 42},
 	)
 	testCursor(
-		&attr{4, 0, []int8{1, 2, 3, 4}, 11},
-		[]byte{4, 1, 2, 3, 4},
+		&attr{4, 0, 11},
+		[]byte{4},
 	)
+}
+
+func testAtrrArray() {
+	testCursor(&attrArray{2, []int8{1, 2}}, []byte{2, 1, 2})
+	testCursor(&attrArray{0, []int8{}}, []byte{0})
 }
 
 func main() {
