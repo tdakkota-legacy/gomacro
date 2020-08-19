@@ -7,6 +7,10 @@ import (
 	"io"
 )
 
+type Printer interface {
+	PrintFile(w io.Writer, fset *token.FileSet, file *ast.File) error
+}
+
 type pp struct{}
 
 func (p pp) PrintFile(w io.Writer, fset *token.FileSet, file *ast.File) error {

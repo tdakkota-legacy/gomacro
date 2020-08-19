@@ -5,10 +5,6 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-
-	"github.com/tdakkota/gomacro"
-
-	"golang.org/x/tools/go/packages"
 )
 
 func fixImports(imports *ast.GenDecl, file *ast.File) {
@@ -37,21 +33,6 @@ func fixImports(imports *ast.GenDecl, file *ast.File) {
 				imports.Specs = append(imports.Specs, imprt)
 			}
 		}
-	}
-}
-
-func createContext(delayed macro.Delayed, pkg *packages.Package) macro.Context {
-	return macro.Context{
-		ASTInfo: macro.ASTInfo{
-			FileSet: pkg.Fset,
-		},
-		TypeInfo: macro.TypeInfo{
-			Package:    pkg.Types,
-			TypesInfo:  pkg.TypesInfo,
-			TypesSizes: pkg.TypesSizes,
-		},
-
-		Delayed: delayed,
 	}
 }
 

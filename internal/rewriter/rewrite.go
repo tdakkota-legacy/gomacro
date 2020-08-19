@@ -2,21 +2,16 @@ package rewriter
 
 import (
 	"bytes"
+	"errors"
+	"github.com/tdakkota/gomacro"
+	"github.com/tdakkota/gomacro/internal/loader"
 	"go/ast"
-	"go/token"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/tdakkota/gomacro"
 
 	"github.com/tdakkota/gomacro/pragma"
 )
-
-type Printer interface {
-	PrintFile(w io.Writer, fset *token.FileSet, file *ast.File) error
-}
 
 type ReWriter struct {
 	path, output string
@@ -45,7 +40,7 @@ func (r ReWriter) Rewrite() error {
 }
 
 func (r ReWriter) RewriteTo(w io.Writer) error {
-	ctx, err := loadOne(r.path)
+	ctx, err := loader.LoadOne(r.path)
 	if err != nil {
 		return err
 	}
@@ -54,41 +49,20 @@ func (r ReWriter) RewriteTo(w io.Writer) error {
 }
 
 func (r ReWriter) rewriteDir() error {
-	loadPath := r.path
-	if !strings.HasSuffix(r.path, "/...") {
-		loadPath += "/..."
-	}
+	return loader.LoadWalk(r.path, func(ctx macro.Context) error {
+		file := ctx.FileSet.File(ctx.File.Pos()).Name()
 
-	pkgs, err := load(loadPath)
-	if err != nil {
-		return err
-	}
-
-	delayed := loadDelayed(pkgs)
-
-	for _, pkg := range pkgs {
-		ctx := createContext(delayed, pkg)
-
-		for _, file := range pkg.Syntax {
-			ctx.File = file
-
-			outputFile, err := prepareOutputFile(r.path, r.output, ctx.FileSet.File(file.Pos()).Name())
-			if err != nil {
-				return err
-			}
-
-			err = r.rewriteOneFile(outputFile, ctx)
-			if err != nil {
-				return err
-			}
+		outputFile, err := prepareOutputFile(r.path, r.output, file)
+		if err != nil {
+			return err
 		}
-	}
 
-	return nil
+		return r.rewriteOneFile(outputFile, ctx)
+	})
 }
 
 func (r ReWriter) rewriteFile() error {
-	ctx, err := loadOne(r.path)
+	ctx, err := loader.LoadOne(r.path)
 	if err != nil {
 		return err
 	}
@@ -124,6 +98,8 @@ func (r ReWriter) rewriteOneFile(output string, ctx macro.Context) error {
 	return nil
 }
 
+var errFailed = errors.New("failed to generate")
+
 func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 	var imports *ast.GenDecl
 
@@ -134,13 +110,17 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 
 	rewrites := len(globalMacros)
 	for _, decl := range context.File.Decls {
-		pragmas := pragma.ParsePragmas(loadComments(decl, &imports))
+		pragmas := pragma.ParsePragmas(loader.LoadComments(decl, &imports))
 
 		localMacros := r.macros.Get(pragmas.Use()...)
 		rewrites += len(localMacros)
 		for _, handler := range localMacros {
 			context.Pragmas = pragmas
+
 			macroRunner.Run(handler, context, decl)
+			if macroRunner.failed {
+				return errFailed
+			}
 		}
 
 		for name, handler := range globalMacros {
@@ -148,7 +128,11 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 				continue
 			}
 			context.Pragmas = pragmas
+
 			macroRunner.Run(handler, context, decl)
+			if macroRunner.failed {
+				return errFailed
+			}
 		}
 	}
 

@@ -1,7 +1,8 @@
-package rewriter
+package loader
 
 import (
 	"errors"
+	"github.com/tdakkota/gomacro/internal"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -12,7 +13,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func load(path ...string) ([]*packages.Package, error) {
+func Load(path ...string) ([]*packages.Package, error) {
 	return packages.Load(&packages.Config{
 		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedTypesSizes | packages.NeedSyntax,
 		Env:  os.Environ(),
@@ -24,10 +25,35 @@ func load(path ...string) ([]*packages.Package, error) {
 	}, path...)
 }
 
+func LoadWalk(path string, cb func(ctx macro.Context) error) error {
+	loadPath := GetLoadPath(path)
+
+	pkgs, err := Load(loadPath)
+	if err != nil {
+		return err
+	}
+	delayed := LoadDelayed(pkgs)
+
+	for _, pkg := range pkgs {
+		ctx := internal.CreateContext(delayed, pkg)
+
+		for _, file := range pkg.Syntax {
+			ctx.File = file
+
+			err := cb(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 var ErrExpectedOnlyOnePackage = errors.New("expected only one package")
 
-func loadOne(path string) (macro.Context, error) {
-	pkgs, err := load(path)
+func LoadOne(path string) (macro.Context, error) {
+	pkgs, err := Load(path)
 	if err != nil {
 		return macro.Context{}, err
 	}
@@ -39,13 +65,13 @@ func loadOne(path string) (macro.Context, error) {
 
 	d := macro.Delayed{}
 	d.Add(pkg)
-	ctx := createContext(d, pkg)
+	ctx := internal.CreateContext(d, pkg)
 	ctx.File = pkg.Syntax[0]
 
 	return ctx, nil
 }
 
-func loadDelayed(pkgs []*packages.Package) macro.Delayed {
+func LoadDelayed(pkgs []*packages.Package) macro.Delayed {
 	delayed := macro.Delayed{}
 	for _, pkg := range pkgs {
 		delayed.Add(pkg)
@@ -54,7 +80,7 @@ func loadDelayed(pkgs []*packages.Package) macro.Delayed {
 	return delayed
 }
 
-func loadComments(decl ast.Decl, imports **ast.GenDecl) (comments *ast.CommentGroup) {
+func LoadComments(decl ast.Decl, imports **ast.GenDecl) (comments *ast.CommentGroup) {
 	switch v := decl.(type) {
 	case *ast.GenDecl:
 		if v.Tok == token.IMPORT {
