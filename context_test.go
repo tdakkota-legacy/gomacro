@@ -4,48 +4,9 @@ import (
 	"go/ast"
 	"testing"
 
-	builders "github.com/tdakkota/astbuilders"
-
 	"github.com/stretchr/testify/require"
+	builders "github.com/tdakkota/astbuilders"
 )
-
-func Test_importEqual(t *testing.T) {
-	t.Run("equal", func(t *testing.T) {
-		a, b := &ast.ImportSpec{
-			Name: ast.NewIdent("a"),
-			Path: &ast.BasicLit{Value: `"import"`},
-		}, &ast.ImportSpec{
-			Name: ast.NewIdent("a"),
-			Path: &ast.BasicLit{Value: `"import"`},
-		}
-
-		require.True(t, importEqual(a, b))
-	})
-
-	t.Run("different-name", func(t *testing.T) {
-		a, b := &ast.ImportSpec{
-			Name: ast.NewIdent("a"),
-			Path: &ast.BasicLit{Value: `"import"`},
-		}, &ast.ImportSpec{
-			Name: ast.NewIdent("b"),
-			Path: &ast.BasicLit{Value: `"import"`},
-		}
-
-		require.False(t, importEqual(a, b))
-	})
-
-	t.Run("different-path", func(t *testing.T) {
-		a, b := &ast.ImportSpec{
-			Name: ast.NewIdent("a"),
-			Path: &ast.BasicLit{Value: `"import"`},
-		}, &ast.ImportSpec{
-			Name: ast.NewIdent("a"),
-			Path: &ast.BasicLit{Value: `"import2"`},
-		}
-
-		require.False(t, importEqual(a, b))
-	})
-}
 
 func TestContext_AddImports(t *testing.T) {
 	ctxt := Context{
