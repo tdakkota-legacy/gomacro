@@ -31,9 +31,9 @@ func urlRel(basePath, targetPath string) (string, error) {
 
 // prepareOutputFile creates output file directory along with any necessary parents
 // and returns absolute path to output file.
-// Output file path is output+filepath.Rel(path, filePath)
-func prepareOutputFile(path, output, filePath string) (string, error) {
-	absPath, err := filepath.Abs(path)
+// Output file path is output+filepath.Rel(source, filePath)
+func prepareOutputFile(source, output, filePath string) (string, error) {
+	absPath, err := filepath.Abs(source)
 	if err != nil {
 		return "", err
 	}

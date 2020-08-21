@@ -27,9 +27,9 @@ type ReWriter struct {
 	loaded loader.Loaded
 }
 
-func NewReWriter(path, output string, macros macro.Macros, printer Printer) ReWriter {
+func NewReWriter(source, output string, macros macro.Macros, printer Printer) ReWriter {
 	return ReWriter{
-		path:    path,
+		path:    source,
 		output:  output,
 		macros:  macros,
 		printer: printer,
