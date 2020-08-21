@@ -7,40 +7,57 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path/filepath"
 
 	"github.com/tdakkota/gomacro"
 
 	"golang.org/x/tools/go/packages"
 )
 
-func Load(path ...string) ([]*packages.Package, error) {
+func LoadPackage(dir, pattern string, environ []string) ([]*packages.Package, error) {
 	return packages.Load(&packages.Config{
+		Dir:  dir,
 		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedTypesSizes | packages.NeedSyntax,
-		Env:  os.Environ(),
+		Env:  environ,
 		Fset: token.NewFileSet(),
 		ParseFile: func(fset *token.FileSet, filename string, src []byte) (*ast.File, error) {
 			const mode = parser.AllErrors | parser.ParseComments
 			return parser.ParseFile(fset, filename, src, mode)
 		},
-	}, path...)
+	}, pattern)
 }
 
-func LoadWalk(path string, cb func(ctx macro.Context) error) error {
-	loadPath := GetLoadPath(path)
+func Load(path string) ([]*packages.Package, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 
-	pkgs, err := Load(loadPath)
+	pattern := "./..."
+	loadPath := path
+	if !fi.IsDir() {
+		pattern = filepath.Base(path)
+		loadPath = filepath.Dir(path)
+	}
+
+	return LoadPackage(loadPath, pattern, os.Environ())
+}
+
+func LoadWalk(path string, cb func(l Loaded, ctx macro.Context) error) error {
+	pkgs, err := Load(path)
 	if err != nil {
 		return err
 	}
-	delayed := LoadDelayed(pkgs)
+	info := loadInfo(pkgs...)
 
 	for _, pkg := range pkgs {
-		ctx := internal.CreateContext(delayed, pkg)
+		ctx := internal.CreateContext(info.delayed, pkg)
 
 		for _, file := range pkg.Syntax {
 			ctx.File = file
 
-			err := cb(ctx)
+			l := Loaded{Packages: info.pkgs, Module: pkg.Module}
+			err := cb(l, ctx)
 			if err != nil {
 				return err
 			}
@@ -71,21 +88,9 @@ func LoadOne(path string) (macro.Context, error) {
 	return ctx, nil
 }
 
-func LoadDelayed(pkgs []*packages.Package) macro.Delayed {
-	delayed := macro.Delayed{}
-	for _, pkg := range pkgs {
-		delayed.Add(pkg)
-	}
-
-	return delayed
-}
-
-func LoadComments(decl ast.Decl, imports **ast.GenDecl) (comments *ast.CommentGroup) {
+func LoadComments(decl ast.Decl) (comments *ast.CommentGroup) {
 	switch v := decl.(type) {
 	case *ast.GenDecl:
-		if v.Tok == token.IMPORT {
-			*imports = v
-		}
 		comments = v.Doc
 	case *ast.FuncDecl:
 		comments = v.Doc
