@@ -1,37 +1,30 @@
 package rewriter
 
 import (
-	"go/ast"
-	"go/token"
+	"errors"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 )
 
-func fixImports(imports *ast.GenDecl, file *ast.File) {
-	if imports == nil {
-		specs := make([]ast.Spec, len(file.Imports))
-		for i := range file.Imports {
-			specs[i] = file.Imports[i]
-		}
+var ErrNotRelative = errors.New("paths is not relative")
 
-		imports = &ast.GenDecl{
-			Tok:   token.IMPORT,
-			Specs: specs,
-		}
-		file.Decls = append([]ast.Decl{imports}, file.Decls...)
-	} else {
-		for _, imprt := range file.Imports {
-			found := false
-			for _, spec := range imports.Specs {
-				if v, ok := spec.(*ast.ImportSpec); ok && v.Path == imprt.Path {
-					found = true
-					break
-				}
-			}
+func urlRel(basePath, targetPath string) (string, error) {
+	base, target := path.Clean(basePath), path.Clean(targetPath)
+	if base == target {
+		return base, nil
+	}
 
-			if !found {
-				imports.Specs = append(imports.Specs, imprt)
-			}
+	var b string
+	for {
+		target, b = path.Split(target)
+		target = path.Clean(target)
+
+		if base == target {
+			return path.Clean(strings.TrimPrefix(targetPath, base)), nil
+		} else if target == b {
+			return "", ErrNotRelative
 		}
 	}
 }
@@ -57,4 +50,10 @@ func prepareOutputFile(path, output, filePath string) (string, error) {
 	}
 
 	return outputFile, nil
+}
+
+func prepareGenFile(filePath string) (string, error) {
+	ext := filepath.Ext(filePath)
+	name := strings.TrimSuffix(filePath, ext)
+	return name + ".gen" + ext, nil
 }

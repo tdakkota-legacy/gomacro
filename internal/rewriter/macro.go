@@ -19,10 +19,14 @@ func NewRunner(fset *token.FileSet) *Runner {
 	}
 }
 
-func (r *Runner) Run(handler macro.Handler, context macro.Context, node ast.Node) ast.Node {
+func (r *Runner) setReport(context *macro.Context) {
 	context.Report = func(report macro.Report) {
 		r.Reportf(report.Pos, report.Message)
 	}
+}
+
+func (r *Runner) Run(handler macro.Handler, context macro.Context, node ast.Node) ast.Node {
+	r.setReport(&context)
 
 	return astutil.Apply(node, func(cursor *astutil.Cursor) bool {
 		context.Pre = true
@@ -39,14 +43,12 @@ func (r *Runner) Run(handler macro.Handler, context macro.Context, node ast.Node
 }
 
 func (r *Runner) post(handler macro.Handler, context macro.Context) astutil.ApplyFunc {
-	context.Report = func(report macro.Report) {
-		r.Reportf(report.Pos, report.Message)
-	}
+	r.setReport(&context)
 
 	return func(cursor *astutil.Cursor) bool {
-		if v := cursor.Node(); v != nil {
-			context.Cursor = cursor
+		context.Cursor = cursor
 
+		if v := cursor.Node(); v != nil {
 			err := handler.Handle(context, v)
 			if err != nil {
 				r.err(v.Pos(), err)

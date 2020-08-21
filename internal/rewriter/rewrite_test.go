@@ -2,10 +2,16 @@ package rewriter
 
 import (
 	"fmt"
+	"go/ast"
+	"go/token"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+	"github.com/tdakkota/gomacro/internal/loader"
+	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/tdakkota/gomacro"
 
@@ -80,4 +86,24 @@ func TestRewriteDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func Test_fixImports(t *testing.T) {
+	_, r := createRewriter("./proto", "./proto_out")
+	r.loaded.Packages = loader.LoadedPackages{
+		"github.com/tdakkota/go-terra/proto": "./proto",
+	}
+
+	fset := token.NewFileSet()
+	f := &ast.File{}
+	astutil.AddImport(fset, f, "github.com/tdakkota/go-terra/proto")
+
+	err := r.fixImports(macro.Context{
+		ASTInfo: macro.ASTInfo{File: f, FileSet: fset},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Equal(t, `"github.com/tdakkota/go-terra/proto_out"`, f.Imports[0].Path.Value)
 }

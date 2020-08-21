@@ -2,12 +2,13 @@ package loader
 
 import (
 	"errors"
-	"github.com/tdakkota/gomacro/internal"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
 	"path/filepath"
+
+	"github.com/tdakkota/gomacro/internal"
 
 	"github.com/tdakkota/gomacro"
 
