@@ -91,12 +91,14 @@ func TestRewriteDir(t *testing.T) {
 func Test_fixImports(t *testing.T) {
 	_, r := createRewriter("./proto", "./proto_out")
 	r.loaded.Packages = loader.LoadedPackages{
-		"github.com/tdakkota/go-terra/proto": "./proto",
+		"github.com/tdakkota/go-terra/proto":              "./proto",
+		"github.com/tdakkota/go-terra/proto/structs/tile": "./proto/structs/tile",
 	}
 
 	fset := token.NewFileSet()
 	f := &ast.File{}
 	astutil.AddImport(fset, f, "github.com/tdakkota/go-terra/proto")
+	astutil.AddImport(fset, f, "github.com/tdakkota/go-terra/proto/structs/tile")
 
 	err := r.fixImports(macro.Context{
 		ASTInfo: macro.ASTInfo{File: f, FileSet: fset},
@@ -106,4 +108,5 @@ func Test_fixImports(t *testing.T) {
 	}
 
 	require.Equal(t, `"github.com/tdakkota/go-terra/proto_out"`, f.Imports[0].Path.Value)
+	require.Equal(t, `"github.com/tdakkota/go-terra/proto_out/structs/tile"`, f.Imports[1].Path.Value)
 }

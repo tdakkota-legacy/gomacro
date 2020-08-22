@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/rewriter"
@@ -16,7 +15,6 @@ func Main(macros macro.Macros) {
 	flag.Parse()
 	if err := Run(flag.Arg(0), flag.Arg(1), macros); err != nil {
 		fmt.Println(err)
-		os.Exit(-1)
 		return
 	}
 }

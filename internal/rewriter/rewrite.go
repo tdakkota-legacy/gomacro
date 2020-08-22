@@ -1,8 +1,8 @@
 package rewriter
 
 import (
-	"bytes"
 	"errors"
+	"go/ast"
 	"io"
 	"os"
 	"path"
@@ -93,43 +93,38 @@ func (r ReWriter) rewriteFile() error {
 }
 
 func (r ReWriter) rewriteOneFile(output string, ctx macro.Context) error {
-	buf := new(bytes.Buffer)
-	err := r.runMacro(buf, ctx)
+	err := os.MkdirAll(filepath.Dir(output), os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(filepath.Dir(output), os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	if buf.Len() > 0 {
-		var w io.Writer = os.Stdout
-		if output != "" {
-			w, err = os.Create(output)
-			if err != nil {
-				return err
-			}
+	var w io.Writer = os.Stdout
+	if output != "" {
+		w, err = os.Create(output)
+		if err != nil {
+			return err
 		}
-
-		_, err = io.Copy(w, buf)
-		return err
 	}
 
-	return nil
+	return r.runMacro(w, ctx)
 }
 
 var errFailed = errors.New("failed to generate")
 
+func copyDecls(a []ast.Decl) []ast.Decl {
+	copyDecl := make([]ast.Decl, len(a))
+	copy(copyDecl, a)
+	return copyDecl
+}
+
 func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
+	macroRunner := NewRunner(context.FileSet)
 	globalPragmas := pragma.ParsePragmas(context.File.Doc)
 	globalMacros := r.macros.Get(globalPragmas.Use()...)
 
-	macroRunner := NewRunner(context.FileSet)
-
 	rewrites := len(globalMacros)
-	for _, decl := range context.File.Decls {
+	copyDecl := copyDecls(context.File.Decls)
+	for _, decl := range copyDecl {
 		pragmas := pragma.ParsePragmas(loader.LoadComments(decl))
 
 		localMacros := r.macros.Get(pragmas.Use()...)
@@ -186,11 +181,12 @@ func (r ReWriter) fixImports(context macro.Context) error {
 				if err != nil {
 					return err
 				}
+				rel = strings.ReplaceAll(rel, "\\", "/")
 
 				newPath := strings.TrimSuffix(importPath, rel) // delete subpackage path
 				newPath = strings.TrimSuffix(newPath, "/")
-				newPath = strings.TrimSuffix(newPath, path.Base(newPath)) // delete target path
-				newPath = path.Join(newPath, filepath.Base(r.output))     // replace target path
+				newPath = strings.TrimSuffix(newPath, path.Base(newPath))  // delete target path
+				newPath = path.Join(newPath, filepath.Base(r.output), rel) // replace target path
 
 				astutil.RewriteImport(context.FileSet, context.File, importPath, newPath)
 			}
