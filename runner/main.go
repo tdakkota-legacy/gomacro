@@ -1,13 +1,11 @@
 package runner
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 
 	"github.com/tdakkota/gomacro"
-	"github.com/tdakkota/gomacro/internal/rewriter"
 )
 
 // Main parses source and output path from flags and calls Run function.
@@ -24,31 +22,10 @@ func Main(macros macro.Macros) {
 // If path is dir, output should be dir too.
 // If output dir does not exist, dir will be created.
 func Run(path, output string, macros macro.Macros) error {
-	return run(path, output, macros, func(r rewriter.ReWriter) error {
-		return r.Rewrite()
-	})
+	return Runner{path, output}.Run(macros)
 }
 
 // Run runs given macros using path and writes result to writer.
 func Print(path string, w io.Writer, macros macro.Macros) error {
-	return run(path, "", macros, func(r rewriter.ReWriter) error {
-		return r.RewriteTo(w)
-	})
-}
-
-func run(path, output string, macros macro.Macros, f func(rewriter.ReWriter) error) error {
-	if path == "" {
-		path = "./"
-	}
-
-	err := f(rewriter.NewReWriter(path, output, macros, rewriter.DefaultPrinter()))
-	if err != nil {
-		if errors.Is(err, macro.ErrStop) {
-			return nil
-		}
-
-		return err
-	}
-
-	return nil
+	return Runner{path, ""}.Print(w, macros)
 }
