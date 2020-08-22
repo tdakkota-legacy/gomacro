@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 
 	macro "github.com/tdakkota/gomacro"
@@ -9,14 +11,11 @@ import (
 )
 
 func main() {
-	m, err := cursor.Create()
-	if err != nil {
-		log.Fatal(err)
+	flag.Parse()
+	if err := run(flag.Arg(0), flag.Arg(1)); err != nil {
+		fmt.Println(err)
+		return
 	}
-
-	runner.Main(macro.Macros{
-		"derive_binary": m,
-	})
 }
 
 func run(path, output string) error {
