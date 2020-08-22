@@ -1,9 +1,15 @@
 package main
 
-import "testing"
+import (
+	"github.com/tdakkota/gomacro/internal/testutil"
+	"testing"
+)
 
 func Test_run(t *testing.T) {
-	err := run(`./testdata/proto`, `/testdata/proto_out`)
+	err := testutil.WithTempDir("gomacrotest", func(path string) error {
+		return run(`./testdata/proto`, path)
+	})
+
 	if err != nil {
 		t.Fatal(err)
 	}
