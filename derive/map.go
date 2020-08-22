@@ -3,8 +3,6 @@ package derive
 import (
 	"go/ast"
 	"go/types"
-
-	"github.com/tdakkota/gomacro/derive/base"
 )
 
 type Map struct {
@@ -13,5 +11,5 @@ type Map struct {
 }
 
 type MapDerive interface {
-	Map(d base.Dispatcher, field base.Field, m Map) (*ast.BlockStmt, error)
+	Map(d *Derive, field Field, m Map) (*ast.BlockStmt, error)
 }

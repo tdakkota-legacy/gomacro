@@ -3,21 +3,42 @@ package derive
 import (
 	"go/ast"
 	"go/types"
-
-	"github.com/tdakkota/gomacro/derive/base"
 )
 
-type Interface interface {
-	CallFor(field base.Field, kind types.BasicKind) (*ast.BlockStmt, error)
-	Impl(field base.Field) (*ast.BlockStmt, error)
+type Protocol interface {
+	CallFor(d *Derive, field Field, kind types.BasicKind) (*ast.BlockStmt, error)
+	Impl(d *Derive, field Field) (*ast.BlockStmt, error)
+	Callback(d *Derive, node *ast.TypeSpec) error
 }
 
-type Info struct {
-	Interface
-	macroName string
-	target    *types.Interface
+type Macro interface {
+	Protocol() Protocol
+	Name() string
+	Target() *types.Interface
 }
 
-func NewDeriveInfo(deriveInterface Interface, name string, target *types.Interface) Info {
-	return Info{Interface: deriveInterface, macroName: name, target: target}
+type macroInfo struct {
+	protocol Protocol
+	name     string
+	target   *types.Interface
+}
+
+func (m macroInfo) Protocol() Protocol {
+	return m.protocol
+}
+
+func (m macroInfo) Name() string {
+	return m.name
+}
+
+func (m macroInfo) Target() *types.Interface {
+	return m.target
+}
+
+func CreateMacro(name string, target *types.Interface, p Protocol) Macro {
+	return macroInfo{
+		protocol: p,
+		name:     name,
+		target:   target,
+	}
 }

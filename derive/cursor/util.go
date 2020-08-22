@@ -82,3 +82,13 @@ func callCurFunc(selector ast.Expr, name string) (*ast.BlockStmt, error) {
 
 	return s.CompleteAsBlock(), nil
 }
+
+func elemType(pkg *types.Package, elem types.Type) *ast.Ident {
+	typ := types.TypeString(elem, func(i *types.Package) string {
+		if i.Path() != pkg.Path() {
+			return i.Name()
+		}
+		return ""
+	})
+	return ast.NewIdent(typ)
+}

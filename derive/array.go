@@ -3,8 +3,6 @@ package derive
 import (
 	"go/ast"
 	"go/types"
-
-	"github.com/tdakkota/gomacro/derive/base"
 )
 
 type Array struct {
@@ -13,5 +11,5 @@ type Array struct {
 }
 
 type ArrayDerive interface {
-	Array(d base.Dispatcher, field base.Field, arr Array) (*ast.BlockStmt, error)
+	Array(d *Derive, field Field, arr Array) (*ast.BlockStmt, error)
 }

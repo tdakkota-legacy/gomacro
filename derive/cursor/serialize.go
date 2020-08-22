@@ -6,21 +6,12 @@ import (
 	"strings"
 
 	builders "github.com/tdakkota/astbuilders"
-	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/derive"
-	"github.com/tdakkota/gomacro/derive/base"
 )
 
-type Serialize struct {
-	Derive *derive.Derive
-	target *types.Interface
-}
+type Serialize struct{}
 
-func NewSerialize(target *types.Interface) *Serialize {
-	return &Serialize{Derive: nil, target: target}
-}
-
-func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockStmt, error) {
+func (m *Serialize) CallFor(d *derive.Derive, field derive.Field, kind types.BasicKind) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 	name := "Write" + strings.Title(types.Typ[kind].String())
 
@@ -40,11 +31,11 @@ func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockS
 	return s.CompleteAsBlock(), nil
 }
 
-func (m *Serialize) Array(d base.Dispatcher, field base.Field, arr derive.Array) (*ast.BlockStmt, error) {
+func (m *Serialize) Array(d *derive.Derive, field derive.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 
 	if v, ok := field.Tag.Lookup("length"); ok {
-		_, err := m.Derive.Interpolator.ExprExpectInfo(v, types.IsInteger)
+		_, err := d.Interpolator.ExprExpectInfo(v, types.IsInteger)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +49,7 @@ func (m *Serialize) Array(d base.Dispatcher, field base.Field, arr derive.Array)
 	value := ast.NewIdent("v")
 	s = s.Range(ast.NewIdent("_"), value, field.Selector,
 		func(loop builders.StatementBuilder) builders.StatementBuilder {
-			loop, err = d.Dispatch(base.Field{
+			loop, err = d.Dispatch(derive.Field{
 				Selector: value,
 			}, arr.Elem, loop)
 			return loop
@@ -67,31 +58,21 @@ func (m *Serialize) Array(d base.Dispatcher, field base.Field, arr derive.Array)
 	return s.CompleteAsBlock(), err
 }
 
-func (m *Serialize) Impl(field base.Field) (*ast.BlockStmt, error) {
+func (m *Serialize) Impl(d *derive.Derive, field derive.Field) (*ast.BlockStmt, error) {
 	return callCurFunc(field.Selector, "Append")
 }
 
-func (m *Serialize) create(context macro.Context) {
-	info := derive.NewDeriveInfo(m, "derive_binary", m.target)
-	m.Derive = derive.NewDerive(context, info)
-}
-
-func (m *Serialize) Callback(context macro.Context, node ast.Node) error {
-	if typeSpec, ok := node.(*ast.TypeSpec); ok {
-		if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-			return nil
-		}
-		m.create(context)
-
-		var err error
-		builder := CreateFunction("Append", typeSpec.Name, func(s builders.StatementBuilder) builders.StatementBuilder {
-			s, err = m.Derive.Derive(typeSpec, s)
-			return s.Return(builders.Nil())
-		})
-
-		context.AddDecls(builder.CompleteAsDecl())
-		return err
+func (m *Serialize) Callback(d *derive.Derive, typeSpec *ast.TypeSpec) error {
+	if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
+		return nil
 	}
 
-	return nil
+	var err error
+	builder := CreateFunction("Append", typeSpec.Name, func(s builders.StatementBuilder) builders.StatementBuilder {
+		s, err = d.Derive(typeSpec, s)
+		return s.Return(builders.Nil())
+	})
+
+	d.AddDecls(builder.CompleteAsDecl())
+	return err
 }
