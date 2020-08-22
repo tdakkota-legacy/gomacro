@@ -139,7 +139,13 @@ func (d *Derive) Dispatch(field base.Field, typ types.Type, s builders.Statement
 func (d *Derive) Derive(t *ast.TypeSpec, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	d.typeSpec = t
 
-	d.obj = d.TypesInfo.ObjectOf(d.typeSpec.Name).(*types.TypeName)
+	obj := d.TypesInfo.ObjectOf(d.typeSpec.Name)
+	if name, ok := obj.(*types.TypeName); ok {
+		d.obj = name
+	} else {
+		return s, fmt.Errorf("failed to load type info for %s", d.typeSpec.Name.Name)
+	}
+
 	field := base.Field{
 		TypeName: d.obj,
 		Selector: d.selector,

@@ -13,10 +13,11 @@ import (
 
 type Serialize struct {
 	Derive *derive.Derive
+	target *types.Interface
 }
 
-func NewSerialize() *Serialize {
-	return &Serialize{Derive: nil}
+func NewSerialize(target *types.Interface) *Serialize {
+	return &Serialize{Derive: nil, target: target}
 }
 
 func (m *Serialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockStmt, error) {
@@ -70,20 +71,9 @@ func (m *Serialize) Impl(field base.Field) (*ast.BlockStmt, error) {
 	return callCurFunc(field.Selector, "Append")
 }
 
-func (m *Serialize) create(context macro.Context) error {
-	if m.Derive != nil {
-		return nil
-	}
-
-	i, err := target("Appender")
-	if err != nil {
-		return err
-	}
-
-	info := derive.NewDeriveInfo(m, "derive_binary", i)
+func (m *Serialize) create(context macro.Context) {
+	info := derive.NewDeriveInfo(m, "derive_binary", m.target)
 	m.Derive = derive.NewDerive(context, info)
-
-	return nil
 }
 
 func (m *Serialize) Callback(context macro.Context, node ast.Node) error {
@@ -91,12 +81,9 @@ func (m *Serialize) Callback(context macro.Context, node ast.Node) error {
 		if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
 			return nil
 		}
+		m.create(context)
 
-		err := m.create(context)
-		if err != nil {
-			return err
-		}
-
+		var err error
 		builder := CreateFunction("Append", typeSpec.Name, func(s builders.StatementBuilder) builders.StatementBuilder {
 			s, err = m.Derive.Derive(typeSpec, s)
 			return s.Return(builders.Nil())

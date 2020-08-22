@@ -7,14 +7,41 @@ import (
 	macro "github.com/tdakkota/gomacro"
 )
 
-func DeriveBinary(ctxt macro.Context, node ast.Node) error {
+type DeriveBinary struct {
+	Serialize   *Serialize
+	Deserialize *Deserialize
+}
+
+func Create() (*DeriveBinary, error) {
+	pkgs, err := load(pkg)
+	if err != nil {
+		return nil, err
+	}
+
+	appender, err := target(pkgs, "Appender")
+	if err != nil {
+		return nil, err
+	}
+
+	scanner, err := target(pkgs, "Scanner")
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeriveBinary{
+		Serialize:   NewSerialize(appender),
+		Deserialize: NewDeserialize(scanner),
+	}, nil
+}
+
+func (d *DeriveBinary) Handle(ctxt macro.Context, node ast.Node) error {
 	if !ctxt.Pre {
-		err := NewSerialize().Callback(ctxt, node)
+		err := d.Serialize.Callback(ctxt, node)
 		if err != nil {
 			return err
 		}
 
-		err = NewDeserialize().Callback(ctxt, node)
+		err = d.Deserialize.Callback(ctxt, node)
 		if err != nil {
 			return err
 		}

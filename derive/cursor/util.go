@@ -37,16 +37,15 @@ func CreateFunction(name string, typ ast.Expr, bodyFunc builders.BodyFunc) build
 
 var ErrFailedToFindCursor = errors.New("failed to import cursor package")
 
-func target(name string) (*types.Interface, error) {
+func load(pkg string) ([]*packages.Package, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedTypes | packages.NeedImports,
 		Env:  os.Environ(),
 	}
-	pkgs, err := packages.Load(cfg, pkg)
-	if err != nil {
-		return nil, err
-	}
+	return packages.Load(cfg, pkg)
+}
 
+func target(pkgs []*packages.Package, name string) (*types.Interface, error) {
 	for _, pkg := range pkgs {
 		obj := pkg.Types.Scope().Lookup(name)
 		if obj == nil {

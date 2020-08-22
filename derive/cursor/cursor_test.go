@@ -15,8 +15,13 @@ func TestCursor(t *testing.T) {
 	err := testutil.WithTempDir("cursor-test", func(path string) error {
 		outputFile := filepath.Join(path, "cursor.go")
 
-		err := runner.Run("./testdata/src/cursor.go", outputFile, macro.Macros{
-			"derive_binary": macro.HandlerFunc(DeriveBinary),
+		m, err := Create()
+		if err != nil {
+			return err
+		}
+
+		err = runner.Run("./testdata/src/cursor.go", outputFile, macro.Macros{
+			"derive_binary": m,
 		})
 		if err != nil {
 			return err

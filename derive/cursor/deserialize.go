@@ -14,10 +14,11 @@ import (
 
 type Deserialize struct {
 	Derive *derive.Derive
+	target *types.Interface
 }
 
-func NewDeserialize() *Deserialize {
-	return &Deserialize{Derive: nil}
+func NewDeserialize(target *types.Interface) *Deserialize {
+	return &Deserialize{Derive: nil, target: target}
 }
 
 func (m *Deserialize) CallFor(field base.Field, kind types.BasicKind) (*ast.BlockStmt, error) {
@@ -102,20 +103,9 @@ func (m *Deserialize) Impl(field base.Field) (*ast.BlockStmt, error) {
 	return callCurFunc(field.Selector, "Scan")
 }
 
-func (m *Deserialize) create(context macro.Context) error {
-	if m.Derive != nil {
-		return nil
-	}
-
-	i, err := target("Scanner")
-	if err != nil {
-		return err
-	}
-
-	info := derive.NewDeriveInfo(m, "derive_binary", i)
+func (m *Deserialize) create(context macro.Context) {
+	info := derive.NewDeriveInfo(m, "derive_binary", m.target)
 	m.Derive = derive.NewDerive(context, info)
-
-	return nil
 }
 
 func (m *Deserialize) Callback(context macro.Context, node ast.Node) error {
@@ -123,12 +113,9 @@ func (m *Deserialize) Callback(context macro.Context, node ast.Node) error {
 		if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
 			return nil
 		}
+		m.create(context)
 
-		err := m.create(context)
-		if err != nil {
-			return err
-		}
-
+		var err error
 		builder := CreateFunction("Scan", builders.RefFor(typeSpec.Name), func(s builders.StatementBuilder) builders.StatementBuilder {
 			s, err = m.Derive.Derive(typeSpec, s)
 			return s.Return(builders.Nil())
