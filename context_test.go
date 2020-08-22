@@ -1,33 +1,21 @@
 package macro
 
 import (
-	"go/ast"
+	"go/token"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	builders "github.com/tdakkota/astbuilders"
 )
 
-func TestContext_AddImports(t *testing.T) {
+func TestContext_Reportf(t *testing.T) {
+	r := Report{}
 	ctxt := Context{
-		ASTInfo: ASTInfo{
-			File: &ast.File{},
+		Report: func(report Report) {
+			r = report
 		},
 	}
 
-	imprt := builders.Import("github.com/tdakkota/astbuilders")
-	ctxt.AddImports(imprt)
-
-	a := require.New(t)
-	a.Len(ctxt.File.Imports, 1)
-	a.Equal(ctxt.File.Imports[0], imprt)
-
-	ctxt.AddImports(imprt)
-	a.Len(ctxt.File.Imports, 1)
-	a.Equal(ctxt.File.Imports[0], imprt)
-
-	imprt2 := builders.Import("fmt")
-	ctxt.AddImports(imprt2)
-	a.Len(ctxt.File.Imports, 2)
-	a.Equal(ctxt.File.Imports[1], imprt2)
+	ctxt.Reportf(11, "%d", 10)
+	require.Equal(t, r.Pos, token.Pos(11))
+	require.Equal(t, r.Message, "10")
 }
