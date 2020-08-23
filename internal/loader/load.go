@@ -8,10 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tdakkota/gomacro/internal"
-
 	"github.com/tdakkota/gomacro"
-
+	"github.com/tdakkota/gomacro/internal"
 	"golang.org/x/tools/go/packages"
 )
 
