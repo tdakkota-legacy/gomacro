@@ -1,10 +1,13 @@
 package rewriter
 
 import (
+	"errors"
 	"fmt"
 	"go/token"
 	"os"
 )
+
+var errFailed = errors.New("failed to generate")
 
 func NewErrorCallback(fset *token.FileSet) func(pos token.Pos, err error) {
 	return func(pos token.Pos, err error) {

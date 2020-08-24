@@ -100,7 +100,7 @@ func Test_fixImports(t *testing.T) {
 	astutil.AddImport(fset, f, "github.com/tdakkota/go-terra/proto")
 	astutil.AddImport(fset, f, "github.com/tdakkota/go-terra/proto/structs/tile")
 
-	err := r.fixImports(macro.Context{
+	err := r.fixImports(false, macro.Context{
 		ASTInfo: macro.ASTInfo{File: f, FileSet: fset},
 	})
 	if err != nil {
@@ -109,4 +109,14 @@ func Test_fixImports(t *testing.T) {
 
 	require.Equal(t, `"github.com/tdakkota/go-terra/proto_out"`, f.Imports[0].Path.Value)
 	require.Equal(t, `"github.com/tdakkota/go-terra/proto_out/structs/tile"`, f.Imports[1].Path.Value)
+}
+
+func TestReWriterGetter(t *testing.T) {
+	source, output := "s", "o"
+	r := ReWriter{
+		source: source,
+		output: output,
+	}
+	require.Equal(t, source, r.Source())
+	require.Equal(t, output, r.Output())
 }

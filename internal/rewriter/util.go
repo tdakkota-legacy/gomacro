@@ -2,10 +2,13 @@ package rewriter
 
 import (
 	"errors"
+	"go/ast"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	builders "github.com/tdakkota/astbuilders"
 )
 
 var ErrNotRelative = errors.New("paths is not relative")
@@ -56,4 +59,16 @@ func prepareGenFile(filePath string) (string, error) {
 	ext := filepath.Ext(filePath)
 	name := strings.TrimSuffix(filePath, ext)
 	return name + ".gen" + ext, nil
+}
+
+func copyDecls(a []ast.Decl) []ast.Decl {
+	copyDecl := make([]ast.Decl, len(a))
+	copy(copyDecl, a)
+	return copyDecl
+}
+
+func copyFile(file *ast.File) *ast.File {
+	return builders.NewFileBuilder(file.Name.Name).
+		AddImports(file.Imports...).
+		Complete()
 }

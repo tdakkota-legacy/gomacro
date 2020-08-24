@@ -1,16 +1,9 @@
 package rewriter
 
 import (
-	"errors"
-	"go/ast"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
-	"strconv"
-	"strings"
-
-	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/loader"
@@ -117,14 +110,6 @@ func (r ReWriter) rewriteOneFile(output string, ctx macro.Context) error {
 	return r.runMacro(w, ctx)
 }
 
-var errFailed = errors.New("failed to generate")
-
-func copyDecls(a []ast.Decl) []ast.Decl {
-	copyDecl := make([]ast.Decl, len(a))
-	copy(copyDecl, a)
-	return copyDecl
-}
-
 func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 	macroRunner := NewRunner(context.FileSet)
 	globalPragmas := pragma.ParsePragmas(context.File.Doc)
@@ -132,6 +117,9 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 
 	rewrites := len(globalMacros)
 	copyDecl := copyDecls(context.File.Decls)
+	if r.appendMode {
+		context.File = copyFile(context.File)
+	}
 	for _, decl := range copyDecl {
 		pragmas := pragma.ParsePragmas(loader.LoadComments(decl))
 
@@ -160,46 +148,11 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 	}
 
 	if len(context.File.Imports) > 0 {
-		err := r.fixImports(context)
+		err := r.fixImports(true, context)
 		if err != nil {
 			return err
 		}
 	}
 
 	return r.printer.PrintFile(w, context.FileSet, context.File)
-}
-
-func (r ReWriter) fixImports(context macro.Context) error {
-	specs := astutil.Imports(context.FileSet, context.File)
-	absPath, err := filepath.Abs(r.source)
-	if err != nil {
-		return err
-	}
-
-	for _, group := range specs {
-		for _, imprt := range group {
-			importPath, _ := strconv.Unquote(imprt.Path.Value)
-			if r.loaded.Packages.Has(importPath) {
-				fsPath, err := filepath.Abs(r.loaded.Packages[importPath])
-				if err != nil {
-					return err
-				}
-
-				rel, err := filepath.Rel(absPath, fsPath)
-				if err != nil {
-					return err
-				}
-				rel = strings.ReplaceAll(rel, "\\", "/")
-
-				newPath := strings.TrimSuffix(importPath, rel) // delete subpackage path
-				newPath = strings.TrimSuffix(newPath, "/")
-				newPath = strings.TrimSuffix(newPath, path.Base(newPath))  // delete target path
-				newPath = path.Join(newPath, filepath.Base(r.output), rel) // replace target path
-
-				astutil.RewriteImport(context.FileSet, context.File, importPath, newPath)
-			}
-		}
-	}
-
-	return nil
 }
