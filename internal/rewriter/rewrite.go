@@ -19,25 +19,33 @@ import (
 )
 
 type ReWriter struct {
-	path, output string
-	appendMode   bool
-	macros       macro.Macros
-	printer      Printer
+	source, output string
+	appendMode     bool
+	macros         macro.Macros
+	printer        Printer
 
 	loaded loader.Loaded
 }
 
 func NewReWriter(source, output string, macros macro.Macros, printer Printer) ReWriter {
 	return ReWriter{
-		path:    source,
+		source:  source,
 		output:  output,
 		macros:  macros,
 		printer: printer,
 	}
 }
 
+func (r ReWriter) Source() string {
+	return r.source
+}
+
+func (r ReWriter) Output() string {
+	return r.output
+}
+
 func (r ReWriter) Rewrite() error {
-	fi, err := os.Stat(r.path)
+	fi, err := os.Stat(r.source)
 	if err != nil {
 		return err
 	}
@@ -53,7 +61,7 @@ func (r ReWriter) Rewrite() error {
 }
 
 func (r ReWriter) RewriteTo(w io.Writer) error {
-	ctx, err := loader.LoadOne(r.path)
+	ctx, err := loader.LoadOne(r.source)
 	if err != nil {
 		return err
 	}
@@ -62,7 +70,7 @@ func (r ReWriter) RewriteTo(w io.Writer) error {
 }
 
 func (r ReWriter) rewriteDir() error {
-	return loader.LoadWalk(r.path, func(l loader.Loaded, ctx macro.Context) error {
+	return loader.LoadWalk(r.source, func(l loader.Loaded, ctx macro.Context) error {
 		r.loaded = l
 		file := ctx.FileSet.File(ctx.File.Pos()).Name()
 
@@ -80,11 +88,11 @@ func (r ReWriter) prepareOutputFile(file string) (string, error) {
 		return prepareGenFile(file)
 	}
 
-	return prepareOutputFile(r.path, r.output, file)
+	return prepareOutputFile(r.source, r.output, file)
 }
 
 func (r ReWriter) rewriteFile() error {
-	ctx, err := loader.LoadOne(r.path)
+	ctx, err := loader.LoadOne(r.source)
 	if err != nil {
 		return err
 	}
@@ -163,7 +171,7 @@ func (r ReWriter) runMacro(w io.Writer, context macro.Context) error {
 
 func (r ReWriter) fixImports(context macro.Context) error {
 	specs := astutil.Imports(context.FileSet, context.File)
-	absPath, err := filepath.Abs(r.path)
+	absPath, err := filepath.Abs(r.source)
 	if err != nil {
 		return err
 	}

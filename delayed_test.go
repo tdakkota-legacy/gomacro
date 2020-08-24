@@ -24,6 +24,9 @@ func TestFind(t *testing.T) {
 
 	ok = d.Find("macro_test2", typeName)
 	a.False(ok)
+
+	ok = d.Find("macro_which_now_exists", typeName)
+	a.False(ok)
 }
 
 func TestAddTypeName(t *testing.T) {
