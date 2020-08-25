@@ -22,10 +22,10 @@ func Main(macros macro.Macros) {
 // If path is dir, output should be dir too.
 // If output dir does not exist, dir will be created.
 func Run(path, output string, macros macro.Macros) error {
-	return Runner{path, output}.Run(macros)
+	return Runner{Source: path, Output: output}.Run(macros)
 }
 
 // Run runs given macros using path and writes result to writer.
 func Print(path string, w io.Writer, macros macro.Macros) error {
-	return Runner{path, ""}.Print(w, macros)
+	return Runner{Source: path}.Print(w, macros)
 }

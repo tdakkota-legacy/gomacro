@@ -10,6 +10,7 @@ import (
 
 type Runner struct {
 	Source, Output string
+	AppendMode     bool
 }
 
 // Run runs given macros using path and writes result to output.
@@ -35,7 +36,10 @@ func (r Runner) run(macros macro.Macros, f func(rewriter.ReWriter) error) error 
 		path = "./"
 	}
 
-	err := f(rewriter.NewReWriter(path, r.Output, macros, rewriter.DefaultPrinter()))
+	writer := rewriter.NewReWriter(path, r.Output, macros, rewriter.DefaultPrinter())
+	writer.SetAppendMode(r.AppendMode)
+
+	err := f(writer)
 	if err != nil {
 		if errors.Is(err, macro.ErrStop) {
 			return nil

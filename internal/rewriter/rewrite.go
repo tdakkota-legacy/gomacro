@@ -29,6 +29,10 @@ func NewReWriter(source, output string, macros macro.Macros, printer Printer) Re
 	}
 }
 
+func (r *ReWriter) SetAppendMode(appendMode bool) {
+	r.appendMode = appendMode
+}
+
 func (r ReWriter) Source() string {
 	return r.source
 }

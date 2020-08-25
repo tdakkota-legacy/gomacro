@@ -10,7 +10,7 @@ import (
 
 func TestRunner_run(t *testing.T) {
 	t.Run("check-path-replace", func(t *testing.T) {
-		r := Runner{"", ""}
+		r := Runner{}
 		err := r.run(map[string]macro.Handler{}, func(writer rewriter.ReWriter) error {
 			require.Equal(t, "./", writer.Source())
 			return nil
@@ -19,7 +19,7 @@ func TestRunner_run(t *testing.T) {
 	})
 
 	t.Run("err-stop", func(t *testing.T) {
-		r := Runner{"", ""}
+		r := Runner{}
 		err := r.run(map[string]macro.Handler{}, func(writer rewriter.ReWriter) error {
 			return macro.ErrStop
 		})
