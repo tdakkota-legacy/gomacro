@@ -14,25 +14,28 @@ type Derive struct {
 	Macro
 	Interpolator Interpolator
 
-	delayed  macro.DelayedTypes
 	first    bool
 	obj      *types.TypeName
 	typeSpec *ast.TypeSpec
 	selector *ast.Ident
 }
 
-func NewDerive(context macro.Context, m Macro) *Derive {
+func NewDerive(m Macro) *Derive {
 	selector := ast.NewIdent("m")
 	d := &Derive{
-		Context:  context,
 		Macro:    m,
-		delayed:  context.Delayed[m.Name()],
-		first:    true,
 		selector: selector,
 	}
 
-	d.Interpolator = NewInterpolator(d, "$m", selector.Name)
+	d.Interpolator = NewInterpolator(d, map[string]string{
+		"$m": selector.Name,
+	})
 	return d
+}
+
+func (d *Derive) With(ctx macro.Context) {
+	d.first = true
+	d.Context = ctx
 }
 
 //nolint: unparam
@@ -63,18 +66,18 @@ func (d *Derive) dispatch1(field Field, typ types.Type, s builders.StatementBuil
 		}
 
 		s = s.If(nil, expr, func(body builders.StatementBuilder) builders.StatementBuilder {
-			body, err = d.dispatch(field, false, typ, body)
+			body, err = d.dispatch(field, typ, body)
 			return body
 		})
 
 		return s, err
 	}
 
-	return d.dispatch(field, false, typ, s)
+	return d.dispatch(field, typ, s)
 }
 
 //nolint:gocyclo
-func (d *Derive) dispatch(field Field, named bool, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	// Types, which will be implemented later
 	if field.TypeName != nil && !d.IsCurrent(typ) {
 		if v, ok := typ.(container); ok {
@@ -92,7 +95,7 @@ func (d *Derive) dispatch(field Field, named bool, typ types.Type, s builders.St
 
 	switch v := typ.(type) {
 	case *types.Basic:
-		if !named {
+		if !field.Named {
 			field.TypeName = nil
 		}
 		return d.Basic(field, v, s)
@@ -116,21 +119,22 @@ func (d *Derive) dispatch(field Field, named bool, typ types.Type, s builders.St
 		return d.Chan(field, v, s)
 	case *types.Named:
 		field.TypeName = v.Obj()
-		if d.delayed.Find(field.TypeName) && !d.first {
+		if d.Delayed.Find(d.Name(), field.TypeName) && !d.first {
 			return d.impl(field, d.Macro.Target(), s)
 		}
 		if d.first {
 			d.first = false
 		}
 
-		return d.dispatch(field, true, v.Underlying(), s)
+		field.Named = true
+		return d.dispatch(field, v.Underlying(), s)
 	}
 
 	return s, nil
 }
 
 func (d *Derive) Dispatch(field Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
-	return d.dispatch1(field, typ, s)
+	return d.dispatch(field, typ, s)
 }
 
 func (d *Derive) Derive(t *ast.TypeSpec, s builders.StatementBuilder) (builders.StatementBuilder, error) {
@@ -173,16 +177,7 @@ func (d *Derive) array(array Array, field Field, s builders.StatementBuilder) (b
 		return s.AddStmts(stmts), nil
 	}
 
-	var err error
-	value := ast.NewIdent("v")
-	s = s.Range(ast.NewIdent("_"), value, field.Selector,
-		func(loop builders.StatementBuilder) builders.StatementBuilder {
-			loop, err = d.dispatch(Field{
-				Selector: value,
-			}, false, array.Elem, loop)
-			return loop
-		})
-	return s, err
+	return s, nil
 }
 
 func (d *Derive) Array(field Field, typ *types.Array, s builders.StatementBuilder) (builders.StatementBuilder, error) {

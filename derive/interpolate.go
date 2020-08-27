@@ -16,8 +16,16 @@ type Interpolator struct {
 	replacer *strings.Replacer
 }
 
-func NewInterpolator(derive *Derive, a ...string) Interpolator {
-	return Interpolator{derive: derive, replacer: strings.NewReplacer(a...)}
+func NewInterpolator(derive *Derive, values map[string]string) Interpolator {
+	replace := make([]string, 0, len(values)*2)
+	for k, v := range values {
+		replace = append(replace, k, v)
+	}
+
+	return Interpolator{
+		derive:   derive,
+		replacer: strings.NewReplacer(replace...),
+	}
 }
 
 // Interpolate interpolates given string.

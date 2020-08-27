@@ -22,6 +22,7 @@ func (t Tag) Lookup(s string) (string, bool) {
 }
 
 type Field struct {
+	Named    bool
 	TypeName *types.TypeName
 	Tag      Tag
 	Selector ast.Expr
