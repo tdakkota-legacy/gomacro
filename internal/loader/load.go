@@ -15,8 +15,12 @@ import (
 
 func LoadPackage(dir, pattern string, environ []string) ([]*packages.Package, error) {
 	return packages.Load(&packages.Config{
-		Dir:  dir,
-		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedTypesSizes | packages.NeedSyntax,
+		Dir: dir,
+		Mode: packages.NeedTypes |
+			packages.NeedTypesInfo |
+			packages.NeedTypesSizes |
+			packages.NeedSyntax |
+			packages.NeedDeps,
 		Env:  environ,
 		Fset: token.NewFileSet(),
 		ParseFile: func(fset *token.FileSet, filename string, src []byte) (*ast.File, error) {
