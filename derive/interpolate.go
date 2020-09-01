@@ -17,7 +17,7 @@ type Interpolator struct {
 }
 
 func NewInterpolator(derive *Derive, values map[string]string) Interpolator {
-	replace := make([]string, 0, len(values)*2)
+	replace := make([]string, 0, len(values)*2) //nolint:gomnd
 	for k, v := range values {
 		replace = append(replace, k, v)
 	}
