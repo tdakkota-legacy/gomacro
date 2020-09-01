@@ -3,36 +3,40 @@ package testutil
 import (
 	"bytes"
 	"go/ast"
-	"go/token"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 
+	builders "github.com/tdakkota/astbuilders"
 	"github.com/tdakkota/gomacro"
 )
 
+func call(node ast.Node, name string, cb func(callExpr *ast.CallExpr) error) error {
+	if callExpr, ok := node.(*ast.CallExpr); ok {
+		if ident, ok := callExpr.Fun.(*ast.Ident); ok && ident.Name == name {
+			return cb(callExpr)
+		}
+	}
+
+	return nil
+}
+
 func CreateMacro(value string) macro.HandlerFunc {
 	return func(cursor macro.Context, node ast.Node) error {
-		if callExpr, ok := node.(*ast.CallExpr); ok {
-			if f, ok := callExpr.Fun.(*ast.Ident); ok && f.Name == "eval" {
-				for i := range callExpr.Args {
-					if v, ok := callExpr.Args[i].(*ast.BasicLit); ok {
-						cursor.Replace(&ast.BasicLit{
-							ValuePos: v.Pos(),
-							Kind:     token.INT,
-							Value:    strconv.Quote(value),
-						})
-					}
+		return call(node, "eval", func(callExpr *ast.CallExpr) error {
+			for i := range callExpr.Args {
+				if v, ok := callExpr.Args[i].(*ast.BasicLit); ok {
+					lit := builders.StringLit(value)
+					lit.ValuePos = v.Pos()
+					cursor.Replace(lit)
 				}
-
 			}
-			return nil
-		}
 
-		return nil
+			return nil
+		})
 	}
 }
 
@@ -57,17 +61,22 @@ func WithTempDir(prefix string, cb func(path string) error) error {
 	return cb(dirPath)
 }
 
-func GoToolRun(filename string) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	cmd := exec.Command(GoTool, "run", filename)
-	cmd.Stdout = buf
+var GoTool = filepath.Join(runtime.GOROOT(), "bin", "go")
+
+func RunGoTool(output io.Writer, args ...string) error {
+	cmd := exec.Command(GoTool, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
+	return cmd.Run()
+}
+
+func GoRun(filename string) (string, error) {
+	buf := bytes.NewBuffer(nil)
+
+	if err := RunGoTool(buf, "run", filename); err != nil {
 		return "", err
 	}
 
 	return buf.String(), nil
 }
-
-var GoTool = filepath.Join(runtime.GOROOT(), "bin", "go")

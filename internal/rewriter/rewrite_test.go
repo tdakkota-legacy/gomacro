@@ -36,7 +36,7 @@ func runRewriteTest(path, outputPath, runPath string, cb func(ReWriter) error) e
 		return err
 	}
 
-	output, err := testutil.GoToolRun(runPath)
+	output, err := testutil.GoRun(runPath)
 	if err != nil {
 		return err
 	}
