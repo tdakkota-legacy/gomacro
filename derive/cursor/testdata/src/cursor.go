@@ -12,7 +12,8 @@ import (
 
 func equalBytes(a, b []byte) {
 	if !bytes.Equal(a, b) {
-		fmt.Println(a, "\n", b)
+		fmt.Println(a)
+		fmt.Println(b)
 		panic("expected equal")
 	}
 }
@@ -58,7 +59,8 @@ func testCursor(s codec, data []byte) {
 type Flag byte
 
 type cycle struct {
-	s []testStruct
+	s        []testStruct
+	arrayDur []time.Duration
 }
 
 //procm:use=derive_binary
@@ -130,7 +132,7 @@ func testStructData() (*testStruct, []byte) {
 			10, 0, 0, 0, 0, 0, 0, 0, // dur
 			0,
 			3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, // importable
-			0, // cycle
+			0, 0, // cycle
 			9, // flag
 		}
 }
