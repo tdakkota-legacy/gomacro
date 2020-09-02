@@ -1,6 +1,7 @@
 package rewriter
 
 import (
+	"github.com/tdakkota/gomacro/internal/rewriter/flags"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -43,7 +44,7 @@ func (r ReWriter) fixImports(deleteUnused bool, context macro.Context) error {
 				continue
 			}
 
-			if !r.appendMode && r.loaded.Packages.Has(importPath) {
+			if !r.flags.Has(flags.AppendMode) && r.loaded.Packages.Has(importPath) {
 				rel, err := getRelativeFilePath(absPath, r.loaded.Packages[importPath])
 				if err != nil {
 					return err
