@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/types"
 	"os"
+	"strings"
 
 	builders "github.com/tdakkota/astbuilders"
 
@@ -83,12 +84,16 @@ func callCurFunc(selector ast.Expr, name string) (*ast.BlockStmt, error) {
 	return s.CompleteAsBlock(), nil
 }
 
-func elemType(pkg *types.Package, elem types.Type) *ast.Ident {
+func elemType(pkg *types.Package, elem types.Type) ast.Expr {
 	typ := types.TypeString(elem, func(i *types.Package) string {
 		if i.Path() != pkg.Path() {
 			return i.Name()
 		}
 		return ""
 	})
-	return ast.NewIdent(typ)
+	split := strings.Split(typ, ".")
+	if len(split) > 1 {
+		return builders.SelectorName(split[0], split[1], split[2:]...)
+	}
+	return ast.NewIdent(split[0])
 }
