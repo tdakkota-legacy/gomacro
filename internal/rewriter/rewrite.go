@@ -31,8 +31,8 @@ func NewReWriter(source, output string, macros macro.Macros, printer Printer) Re
 	}
 }
 
-func (r *ReWriter) SetFlags(flags flags.Flags) {
-	r.flags = flags
+func (r *ReWriter) SetFlags(f flags.Flags) {
+	r.flags = f
 }
 
 func (r ReWriter) Source() string {
