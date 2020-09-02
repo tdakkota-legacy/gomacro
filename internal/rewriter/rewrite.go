@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/loader"
@@ -70,6 +71,11 @@ func (r ReWriter) rewriteDir() error {
 	return loader.LoadWalk(r.source, func(l loader.Loaded, ctx macro.Context) error {
 		r.loaded = l
 		file := ctx.FileSet.File(ctx.File.Pos()).Name()
+
+		// skip generated files
+		if strings.HasSuffix(file, ".gen.go") {
+			return nil
+		}
 
 		outputFile, err := r.prepareOutputFile(file)
 		if err != nil {
