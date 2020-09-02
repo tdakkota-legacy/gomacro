@@ -43,7 +43,7 @@ func (r ReWriter) fixImports(deleteUnused bool, context macro.Context) error {
 				continue
 			}
 
-			if r.loaded.Packages.Has(importPath) {
+			if !r.appendMode && r.loaded.Packages.Has(importPath) {
 				rel, err := getRelativeFilePath(absPath, r.loaded.Packages[importPath])
 				if err != nil {
 					return err
