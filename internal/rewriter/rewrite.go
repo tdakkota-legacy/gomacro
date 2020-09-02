@@ -1,11 +1,12 @@
 package rewriter
 
 import (
-	"github.com/tdakkota/gomacro/internal/rewriter/flags"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tdakkota/gomacro/runner/flags"
 
 	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/loader"

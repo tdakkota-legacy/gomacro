@@ -2,8 +2,9 @@ package runner
 
 import (
 	"errors"
-	"github.com/tdakkota/gomacro/internal/rewriter/flags"
 	"io"
+
+	"github.com/tdakkota/gomacro/runner/flags"
 
 	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/rewriter"

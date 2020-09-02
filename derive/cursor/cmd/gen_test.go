@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/tdakkota/gomacro/internal/testutil"
 	"testing"
+
+	"github.com/tdakkota/gomacro/internal/testutil"
 )
 
 func Test_run(t *testing.T) {

@@ -1,11 +1,12 @@
 package rewriter
 
 import (
-	"github.com/tdakkota/gomacro/internal/rewriter/flags"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/tdakkota/gomacro/runner/flags"
 
 	macro "github.com/tdakkota/gomacro"
 	"golang.org/x/tools/go/ast/astutil"
