@@ -89,8 +89,9 @@ func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuild
 	}
 
 	// User-defined target implementations
-	if types.Implements(typ, d.Macro.Target()) {
-		return d.impl(field, d.Macro.Target(), s)
+	target := d.Macro.Target()
+	if target != nil && types.Implements(typ, target) {
+		return d.impl(field, target, s)
 	}
 
 	switch v := typ.(type) {
