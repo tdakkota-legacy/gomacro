@@ -52,15 +52,17 @@ func Test_parsePragma(t *testing.T) {
 }
 
 func TestParsePragmas(t *testing.T) {
-	comment := &ast.CommentGroup{List: []*ast.Comment{{
-		Text: `//procm:macro=value`,
-	}}}
+	comment := &ast.CommentGroup{List: []*ast.Comment{
+		{Text: `//procm:macro=value`},
+		{Text: `//procm:key=value`},
+	}}
 
 	pragmas := ParsePragmas(comment)
-	assert.Len(t, pragmas, 1)
+	assert.Len(t, pragmas, 2)
 	v, ok := pragmas.Macro()
 	assert.Equal(t, "value", v)
 	assert.True(t, ok)
 	assert.Equal(t, "value", pragmas["macro"])
-	assert.Equal(t, "", pragmas["key"])
+	assert.Equal(t, "value", pragmas["key"])
+	assert.Equal(t, "", pragmas["key2"])
 }

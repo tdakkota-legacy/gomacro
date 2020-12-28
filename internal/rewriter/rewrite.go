@@ -6,12 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tdakkota/gomacro/runner/flags"
-
 	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/loader"
-
 	"github.com/tdakkota/gomacro/pragma"
+	"github.com/tdakkota/gomacro/runner/flags"
 )
 
 type ReWriter struct {
