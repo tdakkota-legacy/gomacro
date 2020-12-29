@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/runner/flags"
@@ -12,10 +13,26 @@ import (
 // Main parses source and output path from flags and calls Run function.
 func Main(macros macro.Macros) {
 	flag.Parse()
-	if err := Run(flag.Arg(0), flag.Arg(1), macros); err != nil {
-		fmt.Println(err)
-		return
+	input, output := flag.Arg(0), flag.Arg(1)
+
+	switch {
+	case input != "" && output != "":
+		if err := Run(flag.Arg(0), flag.Arg(1), macros); err != nil {
+			fmt.Println(err)
+			return
+		}
+	case input != "":
+		if err := Print(flag.Arg(0), os.Stdout, macros); err != nil {
+			fmt.Println(err)
+			return
+		}
+	default:
+		if err := Reader("stdin", os.Stdin, os.Stdout, macros); err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
+
 }
 
 // Run runs given macros using path and writes result to output.

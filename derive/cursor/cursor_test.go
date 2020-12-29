@@ -20,7 +20,11 @@ func TestCursor(t *testing.T) {
 			return err
 		}
 
-		err = runner.Run("./testdata/src/cursor.go", outputFile, macro.Macros{
+		r := runner.Runner{
+			Source: "./testdata/src/cursor.go",
+			Output: outputFile,
+		}
+		err = r.Run(macro.Macros{
 			"derive_binary": m,
 		})
 		if err != nil {
