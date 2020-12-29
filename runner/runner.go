@@ -4,11 +4,12 @@ import (
 	"errors"
 	"io"
 
-	"github.com/tdakkota/gomacro/runner/flags"
-
 	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/rewriter"
+	"github.com/tdakkota/gomacro/runner/flags"
 )
+
+const defaultFlags = 0
 
 type Runner struct {
 	Source, Output string
@@ -25,10 +26,18 @@ func (r Runner) Run(macros macro.Macros) error {
 	})
 }
 
-// Run runs given macros using path and writes result to writer.
+// Print runs given macros using path and writes result to writer.
 func (r Runner) Print(w io.Writer, macros macro.Macros) error {
 	return r.run(macros, func(r rewriter.ReWriter) error {
 		return r.RewriteTo(w)
+	})
+}
+
+// Reader runs given macros using src reader and writes result to writer.
+// This method would work in playground.
+func (r Runner) Reader(name string, src io.Reader, w io.Writer, macros macro.Macros) error {
+	return r.run(macros, func(r rewriter.ReWriter) error {
+		return r.RewriteReader(name, src, w)
 	})
 }
 

@@ -67,6 +67,15 @@ func (r ReWriter) RewriteTo(w io.Writer) error {
 	return r.runMacro(w, ctx)
 }
 
+func (r ReWriter) RewriteReader(name string, src io.Reader, w io.Writer) error {
+	ctx, err := loader.LoadReader(src, name)
+	if err != nil {
+		return err
+	}
+
+	return r.runMacro(w, ctx)
+}
+
 func (r ReWriter) rewriteDir() error {
 	return loader.LoadWalk(r.source, func(l loader.Loaded, ctx macro.Context) error {
 		r.loaded = l

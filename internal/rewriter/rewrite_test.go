@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tdakkota/gomacro/internal/loader"
 	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/tdakkota/gomacro"
-
+	"github.com/tdakkota/gomacro/internal/loader"
 	"github.com/tdakkota/gomacro/internal/testutil"
 )
 
@@ -119,4 +118,22 @@ func TestReWriterGetter(t *testing.T) {
 	}
 	require.Equal(t, source, r.Source())
 	require.Equal(t, output, r.Output())
+}
+
+func TestReWriter_RewriteReader(t *testing.T) {
+	err := testutil.WithTempFile("test-run", func(f *os.File) error {
+		path := testDataPath("src/eval.go")
+		src, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		return runRewriteTest(path, f.Name(), f.Name(), func(writer ReWriter) error {
+			return writer.RewriteReader(f.Name(), src, f)
+		})
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
 }
