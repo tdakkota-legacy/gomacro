@@ -20,11 +20,11 @@ func target(pkg *types.Package) *types.Interface {
 	return ityp.Complete()
 }
 
-func createFunction(name string, typ ast.Expr, bodyFunc builders.BodyFunc) builders.FunctionBuilder {
-	selector := ast.NewIdent("m")
+func createFunction(name string, typ ast.Expr, bodyFunc func(*ast.Ident, builders.StatementBuilder) builders.StatementBuilder) builders.FunctionBuilder {
+	recv := ast.NewIdent("m")
 	return builders.NewFunctionBuilder(name).
 		Recv(&ast.Field{
-			Names: []*ast.Ident{selector},
+			Names: []*ast.Ident{recv},
 			Type:  typ,
 		}).
 		AddResults([]*ast.Field{
@@ -33,7 +33,9 @@ func createFunction(name string, typ ast.Expr, bodyFunc builders.BodyFunc) build
 				Type:  ast.NewIdent("bool"),
 			},
 		}...).
-		Body(bodyFunc)
+		Body(func(s builders.StatementBuilder) builders.StatementBuilder {
+			return bodyFunc(recv, s)
+		})
 }
 
 func elemType(pkg *types.Package, elem types.Type) ast.Expr {

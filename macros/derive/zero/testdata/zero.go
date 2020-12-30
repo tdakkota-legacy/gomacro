@@ -21,6 +21,11 @@ type T struct {
 	em            M
 }
 
+//procm:use=derive_zero
+type Comparable struct {
+	s string
+}
+
 func main() {
 	var t T
 	if !t.Zero() {
@@ -29,5 +34,14 @@ func main() {
 	t.s = "abc"
 	if t.Zero() {
 		panic("expected t is not zero")
+	}
+
+	var c Comparable
+	if !c.Zero() {
+		panic("expected c is zero")
+	}
+	c.s = "abc"
+	if c.Zero() {
+		panic("expected c is not zero")
 	}
 }
