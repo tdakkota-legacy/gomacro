@@ -8,8 +8,9 @@ import (
 
 	"github.com/tdakkota/gomacro/runner/flags"
 
-	macro "github.com/tdakkota/gomacro"
 	"golang.org/x/tools/go/ast/astutil"
+
+	macro "github.com/tdakkota/gomacro"
 )
 
 func getRelativeFilePath(base, target string) (string, error) {

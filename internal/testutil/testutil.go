@@ -24,7 +24,7 @@ func call(node ast.Node, name string, cb func(callExpr *ast.CallExpr) error) err
 	return nil
 }
 
-func CreateMacro(value string) macro.HandlerFunc {
+func CreateTestMacroEval(value string) macro.HandlerFunc {
 	return func(cursor macro.Context, node ast.Node) error {
 		return call(node, "eval", func(callExpr *ast.CallExpr) error {
 			for i := range callExpr.Args {

@@ -4,8 +4,9 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/tdakkota/gomacro"
 	"golang.org/x/tools/go/ast/astutil"
+
+	"github.com/tdakkota/gomacro"
 )
 
 type Runner struct {

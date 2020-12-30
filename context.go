@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"go/token"
 
-	"github.com/tdakkota/gomacro/pragma"
 	"golang.org/x/tools/go/ast/astutil"
+
+	"github.com/tdakkota/gomacro/pragma"
 )
 
 // ErrStop is special error to interrupt AST traversal.

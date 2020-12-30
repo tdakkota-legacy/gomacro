@@ -24,7 +24,7 @@ func testDataPath(path string) string {
 func createRewriter(path, output string) (string, ReWriter) {
 	generatedValue := time.Now().String()
 	return generatedValue, NewReWriter(path, output, macro.Macros{
-		"eval": testutil.CreateMacro(generatedValue),
+		"eval": testutil.CreateTestMacroEval(generatedValue),
 	}, DefaultPrinter())
 }
 

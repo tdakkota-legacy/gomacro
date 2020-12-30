@@ -3,8 +3,9 @@ package loader
 import (
 	"path/filepath"
 
-	macro "github.com/tdakkota/gomacro"
 	"golang.org/x/tools/go/packages"
+
+	macro "github.com/tdakkota/gomacro"
 )
 
 type LoadedPackages map[string]string

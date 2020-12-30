@@ -1,8 +1,9 @@
 package internal
 
 import (
-	"github.com/tdakkota/gomacro"
 	"golang.org/x/tools/go/packages"
+
+	"github.com/tdakkota/gomacro"
 )
 
 func CreateContext(delayed macro.Delayed, pkg *packages.Package) macro.Context {

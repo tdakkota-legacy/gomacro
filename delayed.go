@@ -4,8 +4,9 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/tdakkota/gomacro/pragma"
 	"golang.org/x/tools/go/packages"
+
+	"github.com/tdakkota/gomacro/pragma"
 )
 
 // Delayed is mapping from macro name to DelayedTypes
