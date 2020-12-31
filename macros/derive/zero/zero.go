@@ -71,17 +71,19 @@ func (z zeroProtocol) Callback(d *derive.Derive, typeSpec *ast.TypeSpec) error {
 	}
 
 	var err error
-	builder := createFunction("Zero", typeSpec.Name, func(recv *ast.Ident, s builders.StatementBuilder) builders.StatementBuilder {
-		if types.Comparable(obj.Type()) {
-			lit := &ast.CompositeLit{
-				Type: typeSpec.Name,
+	recv := ast.NewIdent("m")
+	builder := createFunction("Zero", recv, typeSpec.Name,
+		func(s builders.StatementBuilder) builders.StatementBuilder {
+			if types.Comparable(obj.Type()) {
+				lit := &ast.CompositeLit{
+					Type: typeSpec.Name,
+				}
+				return s.Return(builders.Eq(recv, lit))
 			}
-			return s.Return(builders.Eq(recv, lit))
-		}
 
-		s, err = d.Derive(typeSpec, s)
-		return s.Return(ast.NewIdent("true"))
-	})
+			s, err = d.Derive(typeSpec, s)
+			return s.Return(ast.NewIdent("true"))
+		})
 
 	d.AddDecls(builder.CompleteAsDecl())
 	return err

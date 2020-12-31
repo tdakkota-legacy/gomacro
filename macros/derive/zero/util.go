@@ -20,8 +20,7 @@ func target(pkg *types.Package) *types.Interface {
 	return ityp.Complete()
 }
 
-func createFunction(name string, typ ast.Expr, bodyFunc func(*ast.Ident, builders.StatementBuilder) builders.StatementBuilder) builders.FunctionBuilder {
-	recv := ast.NewIdent("m")
+func createFunction(name string, recv *ast.Ident, typ ast.Expr, bodyFunc builders.BodyFunc) builders.FunctionBuilder {
 	return builders.NewFunctionBuilder(name).
 		Recv(&ast.Field{
 			Names: []*ast.Ident{recv},
@@ -33,9 +32,7 @@ func createFunction(name string, typ ast.Expr, bodyFunc func(*ast.Ident, builder
 				Type:  ast.NewIdent("bool"),
 			},
 		}...).
-		Body(func(s builders.StatementBuilder) builders.StatementBuilder {
-			return bodyFunc(recv, s)
-		})
+		Body(bodyFunc)
 }
 
 func elemType(pkg *types.Package, elem types.Type) ast.Expr {

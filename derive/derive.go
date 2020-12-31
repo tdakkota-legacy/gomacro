@@ -120,7 +120,7 @@ func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuild
 		return d.Chan(field, v, s)
 	case *types.Named:
 		field.TypeName = v.Obj()
-		if d.Delayed.Find(d.Name(), field.TypeName) && !d.first {
+		if d.IsDelayed(field.TypeName) {
 			return d.impl(field, d.Macro.Target(), s)
 		}
 		if d.first {
@@ -132,6 +132,10 @@ func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuild
 	}
 
 	return s, nil
+}
+
+func (d *Derive) IsDelayed(typ *types.TypeName) bool {
+	return d.Delayed.Find(d.Name(), typ) && !d.first
 }
 
 func (d *Derive) Dispatch(field Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
@@ -169,26 +173,6 @@ func (d *Derive) Basic(field Field, typ *types.Basic, s builders.StatementBuilde
 	return s.AddStmts(block), nil
 }
 
-func (d *Derive) array(array Array, field Field, s builders.StatementBuilder) (builders.StatementBuilder, error) {
-	if v, ok := d.Macro.Protocol().(ArrayDerive); ok {
-		stmts, err := v.Array(d, field, array)
-		if err != nil {
-			return s, err
-		}
-		return s.AddStmts(stmts), nil
-	}
-
-	return s, nil
-}
-
-func (d *Derive) Array(field Field, typ *types.Array, s builders.StatementBuilder) (builders.StatementBuilder, error) {
-	return d.array(Array{typ.Len(), typ.Elem()}, field, s)
-}
-
-func (d *Derive) Slice(field Field, typ *types.Slice, s builders.StatementBuilder) (builders.StatementBuilder, error) {
-	return d.array(Array{-1, typ.Elem()}, field, s)
-}
-
 func (d *Derive) Struct(field Field, typ *types.Struct, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	var err error
 	for i := 0; i < typ.NumFields(); i++ {
@@ -217,13 +201,28 @@ func (d *Derive) Struct(field Field, typ *types.Struct, s builders.StatementBuil
 	return s, nil
 }
 
-// Ignore interface marshaling (types which implements marshalling interface already handled)
-func (d *Derive) Interface(field Field, typ *types.Interface, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) array(array Array, field Field, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+	if v, ok := d.Macro.Protocol().(ArrayDerive); ok {
+		stmts, err := v.Array(d, field, array)
+		if err != nil {
+			return s, err
+		}
+		return s.AddStmts(stmts), nil
+	}
+
 	return s, nil
 }
 
-// Ignore pointer marshaling
-func (d *Derive) Pointer(field Field, typ *types.Pointer, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) Array(field Field, typ *types.Array, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+	return d.array(Array{typ.Len(), typ.Elem()}, field, s)
+}
+
+func (d *Derive) Slice(field Field, typ *types.Slice, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+	return d.array(Array{-1, typ.Elem()}, field, s)
+}
+
+// Ignore interface marshaling (types which implements marshalling interface already handled)
+func (d *Derive) Interface(field Field, typ *types.Interface, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	return s, nil
 }
 
@@ -232,6 +231,21 @@ func (d *Derive) Map(field Field, typ *types.Map, s builders.StatementBuilder) (
 		stmts, err := v.Map(d, field, Map{
 			Key:   typ.Key(),
 			Value: typ.Elem(),
+		})
+		if err != nil {
+			return s, err
+		}
+		return s.AddStmts(stmts), nil
+	}
+
+	return s, nil
+}
+
+// Ignore pointer marshaling
+func (d *Derive) Pointer(field Field, typ *types.Pointer, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+	if v, ok := d.Macro.Protocol().(PointerDerive); ok {
+		stmts, err := v.Pointer(d, field, Pointer{
+			Elem: typ.Elem(),
 		})
 		if err != nil {
 			return s, err
