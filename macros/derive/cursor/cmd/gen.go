@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/tdakkota/gomacro/runner/flags"
 	"log"
 
 	macro "github.com/tdakkota/gomacro"
-	"github.com/tdakkota/gomacro/derive/cursor"
+	"github.com/tdakkota/gomacro/macros/derive/cursor"
 	"github.com/tdakkota/gomacro/runner"
 )
 
@@ -24,7 +25,13 @@ func run(path, output string) error {
 		log.Fatal(err)
 	}
 
-	return runner.Run(path, output, macro.Macros{
+	r := runner.Runner{
+		Source: path,
+		Output: output,
+		Flags:  flags.AddGeneratedComment,
+	}
+
+	return r.Run(macro.Macros{
 		"derive_binary": m,
 	})
 }
