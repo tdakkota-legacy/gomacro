@@ -10,19 +10,23 @@ import (
 	"github.com/tdakkota/gomacro/runner/flags"
 )
 
-// Main parses source and output path from flags and calls Run function.
+// Main parses source and output path from flags and calls Runner's functions.
+// In case if both arguments are empty, it would read source from stdin and write output to stdout.
+// In case if one argument provided, it would read source from given path and write output to stdout.
+// In case if both arguments are provided, it would read source from first argument path
+// and write output to second argument path.
 func Main(macros macro.Macros) {
 	flag.Parse()
 	input, output := flag.Arg(0), flag.Arg(1)
 
 	switch {
 	case input != "" && output != "":
-		if err := Run(flag.Arg(0), flag.Arg(1), macros); err != nil {
+		if err := Run(input, output, macros); err != nil {
 			fmt.Println(err)
 			return
 		}
 	case input != "":
-		if err := Print(flag.Arg(0), os.Stdout, macros); err != nil {
+		if err := Print(input, os.Stdout, macros); err != nil {
 			fmt.Println(err)
 			return
 		}

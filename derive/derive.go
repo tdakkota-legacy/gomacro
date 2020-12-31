@@ -48,6 +48,10 @@ func (d *Derive) impl(field Field, typ types.Type, s builders.StatementBuilder) 
 	return s.AddStmts(call), nil
 }
 
+func (d *Derive) IsDelayed(typ *types.TypeName) bool {
+	return d.Delayed.Find(d.Name(), typ) && !d.first
+}
+
 func (d *Derive) IsCurrent(typ types.Type) bool {
 	return types.AssignableTo(typ, d.TypesInfo.TypeOf(d.typeSpec.Name))
 }
@@ -132,10 +136,6 @@ func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuild
 	}
 
 	return s, nil
-}
-
-func (d *Derive) IsDelayed(typ *types.TypeName) bool {
-	return d.Delayed.Find(d.Name(), typ) && !d.first
 }
 
 func (d *Derive) Dispatch(field Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
