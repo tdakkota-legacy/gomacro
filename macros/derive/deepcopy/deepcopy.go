@@ -2,11 +2,12 @@ package deepcopy
 
 import (
 	"fmt"
-	builders "github.com/tdakkota/astbuilders"
 	"go/ast"
 	"go/token"
 	"go/types"
 	"strings"
+
+	builders "github.com/tdakkota/astbuilders"
 
 	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/derive"
@@ -76,13 +77,14 @@ func (p deepCopyProtocol) Pointer(d *derive.Derive, field derive.Field, ptr deri
 	}
 
 	var body builders.BodyFunc
-	if named, ok := ptr.Elem.(*types.Named); ok && d.IsDelayed(named.Obj()) {
+	switch named, ok := ptr.Elem.(*types.Named); {
+	case ok && d.IsDelayed(named.Obj()):
 		// Call Copy func if this type have deepcopy derive annotation too.
 		body = func(ifBody builders.StatementBuilder) builders.StatementBuilder {
 			sel := builders.Selector(field.Selector, ast.NewIdent("Copy"))
 			return p.tmpAndRef(expr, builders.Call(sel), ifBody)
 		}
-	} else if !types.Comparable(ptr.Elem) {
+	case !types.Comparable(ptr.Elem):
 		// Copy field-by-field if it contains pointers
 		s = p.tmpAndRef(expr, builders.DeRef(field.Selector), s)
 
@@ -92,7 +94,7 @@ func (p deepCopyProtocol) Pointer(d *derive.Derive, field derive.Field, ptr deri
 			}, ptr.Elem, ifBody)
 			return ifBody
 		}
-	} else {
+	default:
 		body = func(ifBody builders.StatementBuilder) builders.StatementBuilder {
 			return ifBody.Assign(expr)(token.ASSIGN)(builders.DeRef(field.Selector))
 		}
@@ -184,6 +186,7 @@ func (p deepCopyProtocol) Callback(d *derive.Derive, typeSpec *ast.TypeSpec) err
 	return err
 }
 
+// DeepCopy is deriving macro which generates deep copy method.
 func DeepCopy(name string) macro.Handler {
 	return macro.HandlerFunc(func(cursor macro.Context, node ast.Node) error {
 		if cursor.Pre { // skip first pass

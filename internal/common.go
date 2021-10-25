@@ -6,6 +6,7 @@ import (
 	"github.com/tdakkota/gomacro"
 )
 
+// CreateContext creates new macro.Context.
 func CreateContext(delayed macro.Delayed, pkg *packages.Package) macro.Context {
 	return macro.Context{
 		ASTInfo: macro.ASTInfo{

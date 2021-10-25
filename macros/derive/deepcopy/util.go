@@ -101,7 +101,6 @@ loop:
 			_ = printer.Fprint(&s, token.NewFileSet(), stack[i])
 			return nil, 0, fmt.Errorf("unexpected type %T: %s", stack[i], s.String())
 		}
-
 	}
 
 	return expr, indexes, nil

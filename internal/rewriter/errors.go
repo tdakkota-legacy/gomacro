@@ -9,6 +9,7 @@ import (
 
 var errFailed = errors.New("failed to generate")
 
+// NewErrorCallback creates new error printing callback.
 func NewErrorCallback(fset *token.FileSet) func(pos token.Pos, err error) {
 	return func(pos token.Pos, err error) {
 		_, _ = fmt.Fprintln(os.Stderr, fset.Position(pos).String(), err.Error())

@@ -17,6 +17,7 @@ import (
 	"github.com/tdakkota/gomacro/internal"
 )
 
+// LoadWalk loads packages and walks every package file.
 func LoadWalk(path string, cb func(l Loaded, ctx macro.Context) error) error {
 	pkgs, err := Load(path)
 	if err != nil {
@@ -41,6 +42,7 @@ func LoadWalk(path string, cb func(l Loaded, ctx macro.Context) error) error {
 	return nil
 }
 
+// Load loads packages from their path.
 func Load(path string) ([]*packages.Package, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -57,6 +59,7 @@ func Load(path string) ([]*packages.Package, error) {
 	return LoadPackage(loadPath, pattern, os.Environ())
 }
 
+// LoadPackage loads packages from pattern using given workdir and environment.
 func LoadPackage(dir, pattern string, environ []string) ([]*packages.Package, error) {
 	return packages.Load(&packages.Config{
 		Dir: dir,
@@ -74,8 +77,10 @@ func LoadPackage(dir, pattern string, environ []string) ([]*packages.Package, er
 	}, pattern)
 }
 
+// ErrExpectedOnlyOnePackage reports that loader found several packages, but expected only one.
 var ErrExpectedOnlyOnePackage = errors.New("expected only one package")
 
+// LoadOne loads exactly one package or returns error if any.
 func LoadOne(path string) (macro.Context, error) {
 	pkgs, err := Load(path)
 	if err != nil {
@@ -95,6 +100,7 @@ func LoadOne(path string) (macro.Context, error) {
 	return ctx, nil
 }
 
+// LoadReader loads source from io.Reader.
 func LoadReader(r io.Reader, name string) (macro.Context, error) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, name, r, parser.ParseComments)
@@ -141,6 +147,7 @@ func newInfo() *types.Info {
 	}
 }
 
+// LoadComments gets comments from given declaration.
 func LoadComments(decl ast.Decl) (comments *ast.CommentGroup) {
 	switch v := decl.(type) {
 	case *ast.GenDecl:

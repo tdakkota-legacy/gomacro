@@ -9,6 +9,7 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
+// ASTInfo contains AST of Go source file.
 type ASTInfo struct {
 	// Current file.
 	File *ast.File
@@ -30,6 +31,7 @@ func (c ASTInfo) AddImports(newImports ...*ast.ImportSpec) {
 	}
 }
 
+// TypeInfo is a type context of current package.
 type TypeInfo struct {
 	// Current package info.
 	Package *types.Package

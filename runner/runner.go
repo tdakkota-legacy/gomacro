@@ -6,14 +6,11 @@ import (
 
 	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/rewriter"
-	"github.com/tdakkota/gomacro/runner/flags"
 )
 
-const defaultFlags = 0
-
+// Runner is a macro runner.
 type Runner struct {
 	Source, Output string
-	Flags          flags.Flags
 }
 
 // Run runs given macros using path and writes result to output.
@@ -48,7 +45,6 @@ func (r Runner) run(macros macro.Macros, f func(rewriter.ReWriter) error) error 
 	}
 
 	writer := rewriter.NewReWriter(path, r.Output, macros, rewriter.DefaultPrinter())
-	writer.SetFlags(r.Flags)
 
 	err := f(writer)
 	if err != nil {

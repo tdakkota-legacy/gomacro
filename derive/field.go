@@ -7,8 +7,10 @@ import (
 	"strings"
 )
 
+// Tag is a struct tag
 type Tag string
 
+// Lookup gets struct tag value by name.
 func (t Tag) Lookup(s string) (string, bool) {
 	split := strings.Split(string(t), ",")
 
@@ -21,6 +23,7 @@ func (t Tag) Lookup(s string) (string, bool) {
 	return "", false
 }
 
+// Field is a struct field representation.
 type Field struct {
 	Named    bool
 	TypeName *types.TypeName

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/tdakkota/gomacro"
-	"github.com/tdakkota/gomacro/runner/flags"
 )
 
 // Main parses source and output path from flags and calls Runner's functions.
@@ -36,7 +35,6 @@ func Main(macros macro.Macros) {
 			return
 		}
 	}
-
 }
 
 // Run runs given macros using path and writes result to output.
@@ -47,16 +45,15 @@ func Run(path, output string, macros macro.Macros) error {
 	return Runner{
 		Source: path,
 		Output: output,
-		Flags:  flags.AppendMode | flags.AddGeneratedComment,
 	}.Run(macros)
 }
 
 // Print runs given macros using path and writes result to writer.
 func Print(path string, w io.Writer, macros macro.Macros) error {
-	return Runner{Source: path, Flags: defaultFlags}.Print(w, macros)
+	return Runner{Source: path}.Print(w, macros)
 }
 
 // Reader runs given macros using src reader and writes result to writer.
 func Reader(name string, src io.Reader, w io.Writer, macros macro.Macros) error {
-	return Runner{Flags: defaultFlags}.Reader(name, src, w, macros)
+	return Runner{}.Reader(name, src, w, macros)
 }

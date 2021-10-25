@@ -9,11 +9,13 @@ import (
 	"github.com/tdakkota/gomacro"
 )
 
+// Runner is a simple macro runner helper.
 type Runner struct {
 	errorPrinter
 	failed bool
 }
 
+// NewRunner creates Runner.
 func NewRunner(fset *token.FileSet) *Runner {
 	return &Runner{
 		errorPrinter: errorPrinter{NewErrorCallback(fset)},
@@ -26,6 +28,7 @@ func (r *Runner) setReport(context *macro.Context) {
 	}
 }
 
+// Run applies given macro.Handler using macro.Context to ast.Node.
 func (r *Runner) Run(handler macro.Handler, context macro.Context, node ast.Node) ast.Node {
 	r.setReport(&context)
 

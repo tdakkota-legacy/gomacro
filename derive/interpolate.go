@@ -11,11 +11,13 @@ import (
 	"unsafe"
 )
 
+// Interpolator interpolates and evaluates struct tags.
 type Interpolator struct {
 	derive   *Derive
 	replacer *strings.Replacer
 }
 
+// NewInterpolator creates new Interpolator.
 func NewInterpolator(derive *Derive, values map[string]string) Interpolator {
 	replace := make([]string, 0, len(values)*2) //nolint:gomnd
 	for k, v := range values {
@@ -38,6 +40,7 @@ func (i Interpolator) Expr(s string) (ast.Expr, error) {
 	return parser.ParseExpr(i.Interpolate(s))
 }
 
+// ErrExpected reports that expression has invalid type or kind.
 var ErrExpected = errors.New("expected expression")
 
 // ExprExpectKind interpolates given string, tries to parse it and checks basic type kind.
@@ -60,7 +63,7 @@ func (i Interpolator) ExprExpectKind(s string, kind types.BasicKind) (ast.Expr, 
 	return expr, nil
 }
 
-// ExprExpectKind interpolates given string, tries to parse it and checks basic type into.
+// ExprExpectInfo interpolates given string, tries to parse it and checks basic type into.
 func (i Interpolator) ExprExpectInfo(s string, info types.BasicInfo) (ast.Expr, error) {
 	expr, err := i.Expr(s)
 	if err != nil {
@@ -101,7 +104,7 @@ func patchPackage(oldPkg *types.Package, typ types.Type) *types.Package {
 	scope.Insert(types.NewVar(0, oldPkg, "m", typ))
 	// change scope of copy
 	// TODO: find a better way to create a immutable package
-	(*typesPkg)(unsafe.Pointer(pkg)).scope = scope
+	(*typesPkg)(unsafe.Pointer(pkg)).scope = scope // #nosec G103
 	return pkg
 }
 

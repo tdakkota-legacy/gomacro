@@ -12,6 +12,7 @@ type Handler interface {
 // HandlerFunc is type adapter for Handler interface.
 type HandlerFunc func(cursor Context, node ast.Node) error
 
+// Handle implements Handler.
 func (f HandlerFunc) Handle(cursor Context, node ast.Node) error {
 	return f(cursor, node)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/tdakkota/gomacro"
 )
 
+// Derive is a deriving state.
 type Derive struct {
 	macro.Context
 	Macro
@@ -20,6 +21,7 @@ type Derive struct {
 	selector *ast.Ident
 }
 
+// NewDerive creates new Derive.
 func NewDerive(m Macro) *Derive {
 	selector := ast.NewIdent("m")
 	d := &Derive{
@@ -33,6 +35,7 @@ func NewDerive(m Macro) *Derive {
 	return d
 }
 
+// With uses given context.
 func (d *Derive) With(ctx macro.Context) {
 	d.first = true
 	d.Context = ctx
@@ -48,10 +51,14 @@ func (d *Derive) impl(field Field, typ types.Type, s builders.StatementBuilder) 
 	return s.AddStmts(call), nil
 }
 
+// IsDelayed checks that given typename is marked to derive code using current macro.
+// Useful for resolving cycles.
 func (d *Derive) IsDelayed(typ *types.TypeName) bool {
 	return d.Delayed.Find(d.Name(), typ) && !d.first
 }
 
+// IsCurrent checks that given type is current deriving type.
+// Useful for resolving cycles.
 func (d *Derive) IsCurrent(typ types.Type) bool {
 	return types.AssignableTo(typ, d.TypesInfo.TypeOf(d.typeSpec.Name))
 }
@@ -103,25 +110,25 @@ func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuild
 		if !field.Named {
 			field.TypeName = nil
 		}
-		return d.Basic(field, v, s)
+		return d.deriveBasic(field, v, s)
 	case *types.Array:
-		return d.Array(field, v, s)
+		return d.deriveArray(field, v, s)
 	case *types.Slice:
-		return d.Slice(field, v, s)
+		return d.deriveSlice(field, v, s)
 	case *types.Struct:
-		return d.Struct(field, v, s)
+		return d.deriveStruct(field, v, s)
 	case *types.Pointer:
-		return d.Pointer(field, v, s)
+		return d.derivePtr(field, v, s)
 	case *types.Interface:
-		return d.Interface(field, v, s)
+		return d.deriveInterface(field, v, s)
 	case *types.Map:
 		if field.TypeName != nil && checkType(v.Key(), field.TypeName) {
 			return s, fmt.Errorf("%w: '%s' refers to itself", ErrCycleDetected, field.TypeName.Name())
 		}
 
-		return d.Map(field, v, s)
+		return d.deriveMap(field, v, s)
 	case *types.Chan:
-		return d.Chan(field, v, s)
+		return d.deriveChan(field, v, s)
 	case *types.Named:
 		field.TypeName = v.Obj()
 		if d.IsDelayed(field.TypeName) {
@@ -138,10 +145,12 @@ func (d *Derive) dispatch(field Field, typ types.Type, s builders.StatementBuild
 	return s, nil
 }
 
+// Dispatch derives code for given field.
 func (d *Derive) Dispatch(field Field, typ types.Type, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	return d.dispatch(field, typ, s)
 }
 
+// Derive derives code for given type declaration.
 func (d *Derive) Derive(t *ast.TypeSpec, s builders.StatementBuilder) (builders.StatementBuilder, error) {
 	d.typeSpec = t
 
@@ -160,7 +169,11 @@ func (d *Derive) Derive(t *ast.TypeSpec, s builders.StatementBuilder) (builders.
 	return d.dispatch1(field, d.TypesInfo.TypeOf(d.typeSpec.Name), s)
 }
 
-func (d *Derive) Basic(field Field, typ *types.Basic, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) deriveBasic(
+	field Field,
+	typ *types.Basic,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
 	if typ.Kind() == types.Invalid {
 		return s, fmt.Errorf("%v: %w", field.Selector, ErrInvalidType)
 	}
@@ -173,7 +186,11 @@ func (d *Derive) Basic(field Field, typ *types.Basic, s builders.StatementBuilde
 	return s.AddStmts(block), nil
 }
 
-func (d *Derive) Struct(field Field, typ *types.Struct, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) deriveStruct(
+	field Field,
+	typ *types.Struct,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
 	var err error
 	for i := 0; i < typ.NumFields(); i++ {
 		subField := typ.Field(i)
@@ -201,7 +218,11 @@ func (d *Derive) Struct(field Field, typ *types.Struct, s builders.StatementBuil
 	return s, nil
 }
 
-func (d *Derive) array(array Array, field Field, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) tryDeriveArray(
+	array Array,
+	field Field,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
 	if v, ok := d.Macro.Protocol().(ArrayDerive); ok {
 		stmts, err := v.Array(d, field, array)
 		if err != nil {
@@ -213,20 +234,36 @@ func (d *Derive) array(array Array, field Field, s builders.StatementBuilder) (b
 	return s, nil
 }
 
-func (d *Derive) Array(field Field, typ *types.Array, s builders.StatementBuilder) (builders.StatementBuilder, error) {
-	return d.array(Array{typ.Len(), typ.Elem()}, field, s)
+func (d *Derive) deriveArray(
+	field Field,
+	typ *types.Array,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
+	return d.tryDeriveArray(Array{typ.Len(), typ.Elem()}, field, s)
 }
 
-func (d *Derive) Slice(field Field, typ *types.Slice, s builders.StatementBuilder) (builders.StatementBuilder, error) {
-	return d.array(Array{-1, typ.Elem()}, field, s)
+func (d *Derive) deriveSlice(
+	field Field,
+	typ *types.Slice,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
+	return d.tryDeriveArray(Array{-1, typ.Elem()}, field, s)
 }
 
-// Ignore interface marshaling (types which implements marshalling interface already handled)
-func (d *Derive) Interface(field Field, typ *types.Interface, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) deriveInterface(
+	_ Field,
+	_ *types.Interface,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
+	// Ignore interface marshaling (types which implements marshaling interface already handled)
 	return s, nil
 }
 
-func (d *Derive) Map(field Field, typ *types.Map, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) deriveMap(
+	field Field,
+	typ *types.Map,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
 	if v, ok := d.Macro.Protocol().(MapDerive); ok {
 		stmts, err := v.Map(d, field, Map{
 			Key:   typ.Key(),
@@ -241,8 +278,11 @@ func (d *Derive) Map(field Field, typ *types.Map, s builders.StatementBuilder) (
 	return s, nil
 }
 
-// Ignore pointer marshaling
-func (d *Derive) Pointer(field Field, typ *types.Pointer, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) derivePtr(
+	field Field,
+	typ *types.Pointer,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
 	if v, ok := d.Macro.Protocol().(PointerDerive); ok {
 		stmts, err := v.Pointer(d, field, Pointer{
 			Elem: typ.Elem(),
@@ -256,7 +296,10 @@ func (d *Derive) Pointer(field Field, typ *types.Pointer, s builders.StatementBu
 	return s, nil
 }
 
-// Ignore chan marshaling
-func (d *Derive) Chan(field Field, typ *types.Chan, s builders.StatementBuilder) (builders.StatementBuilder, error) {
+func (d *Derive) deriveChan(
+	field Field,
+	typ *types.Chan,
+	s builders.StatementBuilder,
+) (builders.StatementBuilder, error) {
 	return s, nil
 }

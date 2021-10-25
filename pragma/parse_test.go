@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //nolint:scopelint
@@ -43,10 +43,11 @@ func Test_parsePragma(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%s,%t", tt.pair, tt.wantOk), func(t *testing.T) {
+			a := require.New(t)
 			key, value, ok := parsePragma(tt.pair)
-			assert.Equal(t, tt.wantKey, key)
-			assert.Equal(t, tt.wantValue, value)
-			assert.Equal(t, tt.wantOk, ok)
+			a.Equal(tt.wantKey, key)
+			a.Equal(tt.wantValue, value)
+			a.Equal(tt.wantOk, ok)
 		})
 	}
 }
@@ -57,12 +58,10 @@ func TestParsePragmas(t *testing.T) {
 		{Text: `//procm:key=value`},
 	}}
 
+	a := require.New(t)
 	pragmas := ParsePragmas(comment)
-	assert.Len(t, pragmas, 2)
-	v, ok := pragmas.Macro()
-	assert.Equal(t, "value", v)
-	assert.True(t, ok)
-	assert.Equal(t, "value", pragmas["macro"])
-	assert.Equal(t, "value", pragmas["key"])
-	assert.Equal(t, "", pragmas["key2"])
+	a.Len(pragmas, 2)
+	a.Equal("value", pragmas["macro"])
+	a.Equal("value", pragmas["key"])
+	a.Equal("", pragmas["key2"])
 }

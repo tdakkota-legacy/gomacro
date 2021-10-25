@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/tdakkota/gomacro/runner/flags"
 	"log"
 
 	macro "github.com/tdakkota/gomacro"
@@ -28,7 +27,6 @@ func run(path, output string) error {
 	r := runner.Runner{
 		Source: path,
 		Output: output,
-		Flags:  flags.AddGeneratedComment,
 	}
 
 	return r.Run(macro.Macros{

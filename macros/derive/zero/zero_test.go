@@ -25,7 +25,11 @@ func TestZero(t *testing.T) {
 			return err
 		}
 
-		err = testutil.RunGoTool(os.Stdout, "run", outputFile)
+		if err := testutil.CopyFile(filepath.Join(path, "gen.go"), r.Source); err != nil {
+			return err
+		}
+
+		err = testutil.RunGoTool(os.Stdout, "run", outputFile, filepath.Join(path, "gen.go"))
 		if err != nil {
 			return err
 		}

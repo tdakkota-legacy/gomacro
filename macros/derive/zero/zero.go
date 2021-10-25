@@ -89,6 +89,7 @@ func (z zeroProtocol) Callback(d *derive.Derive, typeSpec *ast.TypeSpec) error {
 	return err
 }
 
+// Zero is deriving macro which generates zero value check method.
 func Zero(name string) macro.Handler {
 	return macro.HandlerFunc(func(cursor macro.Context, node ast.Node) error {
 		if cursor.Pre { // skip first pass

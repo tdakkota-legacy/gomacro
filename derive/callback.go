@@ -6,6 +6,7 @@ import (
 	macro "github.com/tdakkota/gomacro"
 )
 
+// Callback creates new macro handler from derive macro.
 func Callback(m Macro) macro.HandlerFunc {
 	p := m.Protocol()
 	d := NewDerive(m)

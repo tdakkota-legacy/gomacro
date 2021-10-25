@@ -86,7 +86,7 @@ func (d Delayed) AddDecls(typesInfo *types.Info, decls []ast.Decl) {
 	}
 }
 
-// AddDecls adds type names from package.
+// Add adds type names from package.
 // If declaration have a magic comment, type name will be added.
 func (d Delayed) Add(pkg *packages.Package) {
 	for _, file := range pkg.Syntax {

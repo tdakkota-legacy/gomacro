@@ -8,8 +8,10 @@ import (
 	macro "github.com/tdakkota/gomacro"
 )
 
+// LoadedPackages is a container of loaded packages.
 type LoadedPackages map[string]string
 
+// Add marks package as loaded.
 func (l LoadedPackages) Add(pkg *packages.Package) {
 	if len(pkg.Syntax) > 0 {
 		file := pkg.Fset.File(pkg.Syntax[0].Pos()).Name()
@@ -17,6 +19,7 @@ func (l LoadedPackages) Add(pkg *packages.Package) {
 	}
 }
 
+// Has denotes that package already has been loaded.
 func (l LoadedPackages) Has(path string) bool {
 	_, ok := l[path]
 	return ok

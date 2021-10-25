@@ -9,11 +9,14 @@ import (
 	macro "github.com/tdakkota/gomacro"
 )
 
+// DeriveBinary is a deriving macro which generates
+// binary (de)serialization implementations using github.com/tdakkota/cursor.
 type DeriveBinary struct {
 	Serialize   macro.Handler
 	Deserialize macro.Handler
 }
 
+// Create creates new DeriveBinary instance.
 func Create() (*DeriveBinary, error) {
 	pkgs, err := load(pkg)
 	if err != nil {
@@ -39,6 +42,7 @@ func Create() (*DeriveBinary, error) {
 	}, nil
 }
 
+// Handle implements macro.Handler.
 func (d *DeriveBinary) Handle(ctxt macro.Context, node ast.Node) error {
 	if !ctxt.Pre {
 		err := d.Serialize.Handle(ctxt, node)

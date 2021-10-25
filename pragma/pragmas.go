@@ -3,22 +3,18 @@ package pragma
 import "strings"
 
 const (
-	UsePragma   = "use"
-	MacroPragma = "macro"
+	// UsePragma is a name of pragma which denotes to run macro.
+	UsePragma = "use"
 )
 
+// Pragmas contains Go AST annotations.
 type Pragmas map[string]string
 
+// Use gets slice of macro names to run.
 func (p Pragmas) Use() []string {
 	r := strings.Split(p[UsePragma], ",")
 	if len(r) == 1 && r[0] == "" {
 		return nil
 	}
 	return r
-}
-
-func (p Pragmas) Macro() (string, bool) {
-	v, ok := p[MacroPragma]
-
-	return v, ok
 }

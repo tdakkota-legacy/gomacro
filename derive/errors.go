@@ -2,5 +2,9 @@ package derive
 
 import "errors"
 
-var ErrCycleDetected = errors.New("cycle detected")
-var ErrInvalidType = errors.New("got invalid type")
+var (
+	// ErrCycleDetected reports that code cannot be derived due to infinite cycle.
+	ErrCycleDetected = errors.New("cycle detected")
+	// ErrInvalidType reports that type check failed.
+	ErrInvalidType = errors.New("got invalid type")
+)

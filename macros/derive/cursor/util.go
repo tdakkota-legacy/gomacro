@@ -14,7 +14,8 @@ import (
 
 const pkg = "github.com/tdakkota/cursor"
 
-func CreateFunction(name string, typ ast.Expr, bodyFunc builders.BodyFunc) builders.FunctionBuilder {
+// createFunction is a generic helper for function creation.
+func createFunction(name string, typ ast.Expr, bodyFunc builders.BodyFunc) builders.FunctionBuilder {
 	selector := ast.NewIdent("m")
 	return builders.NewFunctionBuilder(name).
 		Recv(&ast.Field{
@@ -36,7 +37,8 @@ func CreateFunction(name string, typ ast.Expr, bodyFunc builders.BodyFunc) build
 		Body(bodyFunc)
 }
 
-var ErrFailedToFindCursor = errors.New("failed to import cursor package")
+// ErrFailedToFindCursor reports that github.com/tdakkota/cursor import failed.
+var ErrFailedToFindCursor = errors.New("import cursor package")
 
 func load(pkg string) ([]*packages.Package, error) {
 	cfg := &packages.Config{

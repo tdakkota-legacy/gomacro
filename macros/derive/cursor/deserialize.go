@@ -10,8 +10,10 @@ import (
 	"github.com/tdakkota/gomacro/derive"
 )
 
+// Deserialize defines derive.Protocol for binary deserialization.
 type Deserialize struct{}
 
+// CallFor implements derive.Protocol.
 func (m *Deserialize) CallFor(d *derive.Derive, field derive.Field, kind types.BasicKind) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 	name := "Read" + strings.Title(types.Typ[kind].String())
@@ -41,6 +43,7 @@ func (m *Deserialize) createArray(size, sel, typ ast.Expr, s builders.StatementB
 	return s.Assign(sel)(token.ASSIGN)(builders.MakeExpr(builders.SliceOf(typ), size, nil))
 }
 
+// Array implements derive.ArrayDerive.
 func (m *Deserialize) Array(d *derive.Derive, field derive.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 	size := ast.NewIdent("n")
@@ -83,17 +86,19 @@ func (m *Deserialize) Array(d *derive.Derive, field derive.Field, arr derive.Arr
 	return s.CompleteAsBlock(), err
 }
 
+// Impl implements derive.Protocol.
 func (m *Deserialize) Impl(d *derive.Derive, field derive.Field) (*ast.BlockStmt, error) {
 	return callCurFunc(field.Selector, "Scan")
 }
 
+// Callback implements derive.Protocol.
 func (m *Deserialize) Callback(d *derive.Derive, typeSpec *ast.TypeSpec) error {
 	if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
 		return nil
 	}
 
 	var err error
-	builder := CreateFunction("Scan", builders.RefFor(typeSpec.Name), func(s builders.StatementBuilder) builders.StatementBuilder {
+	builder := createFunction("Scan", builders.RefFor(typeSpec.Name), func(s builders.StatementBuilder) builders.StatementBuilder {
 		s, err = d.Derive(typeSpec, s)
 		return s.Return(builders.Nil())
 	})

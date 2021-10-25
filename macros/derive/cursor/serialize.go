@@ -9,8 +9,10 @@ import (
 	"github.com/tdakkota/gomacro/derive"
 )
 
+// Serialize defines derive.Protocol for binary serialization.
 type Serialize struct{}
 
+// CallFor implements derive.Protocol.
 func (m *Serialize) CallFor(d *derive.Derive, field derive.Field, kind types.BasicKind) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 	name := "Write" + strings.Title(types.Typ[kind].String())
@@ -31,6 +33,7 @@ func (m *Serialize) CallFor(d *derive.Derive, field derive.Field, kind types.Bas
 	return s.CompleteAsBlock(), nil
 }
 
+// Array implements derive.ArrayDerive.
 func (m *Serialize) Array(d *derive.Derive, field derive.Field, arr derive.Array) (*ast.BlockStmt, error) {
 	s := builders.NewStatementBuilder()
 
@@ -58,20 +61,23 @@ func (m *Serialize) Array(d *derive.Derive, field derive.Field, arr derive.Array
 	return s.CompleteAsBlock(), err
 }
 
+// Impl implements derive.Protocol.
 func (m *Serialize) Impl(d *derive.Derive, field derive.Field) (*ast.BlockStmt, error) {
 	return callCurFunc(field.Selector, "Append")
 }
 
+// Callback implements derive.Protocol.
 func (m *Serialize) Callback(d *derive.Derive, typeSpec *ast.TypeSpec) error {
 	if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
 		return nil
 	}
 
 	var err error
-	builder := CreateFunction("Append", typeSpec.Name, func(s builders.StatementBuilder) builders.StatementBuilder {
-		s, err = d.Derive(typeSpec, s)
-		return s.Return(builders.Nil())
-	})
+	builder := createFunction("Append", typeSpec.Name,
+		func(s builders.StatementBuilder) builders.StatementBuilder {
+			s, err = d.Derive(typeSpec, s)
+			return s.Return(builders.Nil())
+		})
 
 	d.AddDecls(builder.CompleteAsDecl())
 	return err
