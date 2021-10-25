@@ -80,7 +80,7 @@ func CopyFile(to, from string) error {
 		_ = dst.Close()
 	}()
 
-	src, err := os.Open(from)
+	src, err := os.Open(filepath.Clean(from))
 	if err != nil {
 		return err
 	}
