@@ -1,4 +1,4 @@
-name: Go
+name: Lint
 
 on:
   push:
@@ -10,8 +10,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2.3.5
+
+      - name: Install Go
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.17
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: latest
+          skip-go-installation: true
+
+  # Check if there are any dirty changes after go mod tidy
+  check-mod:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -41,12 +58,5 @@ jobs:
       - name: Download dependencies
         run: go mod download && go mod tidy
 
-      - name: Run tests
-        run: |
-          go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v2.1.0
-
-      - name: Build
-        run: go build -v .
+      - name: Check git diff
+        run: git diff --exit-code
