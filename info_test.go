@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tdakkota/astbuilders"
+	builders "github.com/tdakkota/astbuilders"
 )
 
 func TestASTInfo_AddDecls(t *testing.T) {

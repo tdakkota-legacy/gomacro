@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/loader"
 	"github.com/tdakkota/gomacro/pragma"
 )

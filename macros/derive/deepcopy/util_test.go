@@ -1,13 +1,14 @@
 package deepcopy
 
 import (
-	"github.com/stretchr/testify/require"
 	"go/ast"
 	"go/parser"
 	"go/printer"
 	"go/token"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_changeSelectorHead(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/tools/go/ast/astutil"
 
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 )
 
 // Runner is a simple macro runner helper.

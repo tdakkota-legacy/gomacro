@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal"
 )
 

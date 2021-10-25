@@ -6,7 +6,7 @@ import (
 	"go/types"
 
 	builders "github.com/tdakkota/astbuilders"
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 )
 
 // Derive is a deriving state.

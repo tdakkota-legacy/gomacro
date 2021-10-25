@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 	"github.com/tdakkota/gomacro/internal/rewriter"
 )
 

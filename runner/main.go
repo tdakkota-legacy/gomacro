@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 )
 
 // Main parses source and output path from flags and calls Runner's functions.

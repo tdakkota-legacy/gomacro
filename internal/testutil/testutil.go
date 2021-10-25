@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	builders "github.com/tdakkota/astbuilders"
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 )
 
 func call(node ast.Node, name string, cb func(callExpr *ast.CallExpr) error) error {

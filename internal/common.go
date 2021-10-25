@@ -3,7 +3,7 @@ package internal
 import (
 	"golang.org/x/tools/go/packages"
 
-	"github.com/tdakkota/gomacro"
+	macro "github.com/tdakkota/gomacro"
 )
 
 // CreateContext creates new macro.Context.
